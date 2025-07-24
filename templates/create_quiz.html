@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quiz - Quiz App</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .quiz-header {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #71ad98;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #e5e7eb;
+            transition: border-left-color 0.2s;
+        }
+        
+        .question-card:hover {
+            border-left-color: #71ad98;
+        }
+        
+        .question-card.active {
+            border-left-color: #71ad98;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #71ad98;
+            box-shadow: 0 0 0 3px rgba(113, 173, 152, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+        }
+        
+        .option-group:hover {
+            background: #f9fafb;
+        }
+        
+        .option-radio {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: #71ad98;
+        }
+        
+        .option-input {
+            flex: 1;
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem 0;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .option-input:focus {
+            outline: none;
+            border-bottom-color: #71ad98;
+        }
+        
+        .add-question-btn {
+            background: #f8fafc;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+        }
+        
+        .add-question-btn:hover {
+            border-color: #71ad98;
+            background: #f0fdf4;
+        }
+        
+        .btn-primary {
+            background: #71ad98;
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #5d9a7f;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #d1d5db;
+            padding: 0.75rem 2rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+            color: #1f2937;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .question-number {
+            background: #71ad98;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-decoration-1"></div>
+        <div class="bg-decoration-2"></div>
+        <div class="content">
+            <header class="header">
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="logo-section" style="cursor: pointer;" onclick="window.location.href='/'">
+                            <div class="logo-icon"><i data-lucide="brain"></i></div>
+                            <h1 class="logo-text">Quiz App</h1>
+                        </div>
+                        <div class="user-section">
+                            <div class="user-info">
+                                <span class="user-name" id="userName">Guest</span>
+                                <div class="avatar" id="avatar"><i data-lucide="user"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main>
+                <div class="form-container">
+                    <!-- Quiz Header -->
+                    <div class="quiz-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h1 style="margin: 0; color: #374151; font-size: 2rem;">Create New Quiz</h1>
+                            <button class="btn-secondary" onclick="window.location.href='/my-quizzes'">
+                                <i data-lucide="arrow-left" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></i>
+                                Back to My Quizzes
+                            </button>
+                        </div>
+                        <p style="color: #6b7280; margin-bottom: 2rem;">Build your quiz with multiple choice questions</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Quiz Title *</label>
+                            <input type="text" id="quizTitle" class="form-input" placeholder="Enter your quiz title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea id="quizDescription" class="form-input form-textarea" placeholder="Describe what this quiz is about..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Topic *</label>
+                            <select id="quizTopic" class="form-input" required>
+                                <option value="">Select a topic</option>
+                                <option value="Science">Science</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Literature">Literature</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Art & Culture">Art & Culture</option>
+                                <option value="Business">Business</option>
+                                <option value="Health & Medicine">Health & Medicine</option>
+                                <option value="General Knowledge">General Knowledge</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- JSON Import Section -->
+                        <div class="form-group" style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem; margin-top: 1.5rem;">
+                            <label class="form-label">
+                                <i data-lucide="file-text" style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem;"></i>
+                                Import from File (Optional)
+                            </label>
+                            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
+                                Upload a JSON or Excel file to automatically populate your quiz with questions. This will override manual question entry.
+                            </p>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <input type="file" id="jsonFileInput" accept=".json,.xlsx,.xls" class="form-input" style="flex: 1;">
+                                <button type="button" onclick="showJsonExample()" class="btn-secondary" style="white-space: nowrap;">
+                                    View Example
+                                </button>
+                                <button type="button" onclick="clearImportedQuestions()" class="btn-danger" style="white-space: nowrap;" id="clearQuestionsBtn" style="display: none;">
+                                    Clear All
+                                </button>
+                            </div>
+                            <div id="jsonExample" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.375rem; border-left: 3px solid #71ad98;">
+                                <div style="margin-bottom: 1.5rem;">
+                                    <p style="font-weight: 600; margin-bottom: 0.5rem; color: #374151;">JSON Format Example:</p>
+                                    <pre style="font-size: 0.875rem; color: #4b5563; white-space: pre-wrap; margin: 0;">{
+  "questions": [
+    {
+      "text": "What is the capital of France?",
+      "option_a": "London",
+      "option_b": "Berlin",
+      "option_c": "Paris",
+      "option_d": "Madrid",
+      "correct_option": "C"
+    }
+  ]
+}</pre>
+                                </div>
+                                <div>
+                                    <p style="font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Excel Format Example:</p>
+                                    <div style="font-size: 0.875rem; color: #4b5563;">
+                                        <p style="margin-bottom: 0.5rem;">Create an Excel file with these column headers:</p>
+                                        <table style="border-collapse: collapse; width: 100%; margin-top: 0.5rem;">
+                                            <tr style="background: #e5e7eb;">
+                                                <th style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">text</th>
+                                                <th style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">option_a</th>
+                                                <th style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">option_b</th>
+                                                <th style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">option_c</th>
+                                                <th style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">option_d</th>
+                                                <th style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">correct_option</th>
+                                            </tr>
+                                            <tr>
+                                                <td style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">What is 2+2?</td>
+                                                <td style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">3</td>
+                                                <td style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">4</td>
+                                                <td style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">5</td>
+                                                <td style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">6</td>
+                                                <td style="border: 1px solid #d1d5db; padding: 0.25rem; font-size: 0.75rem;">B</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Questions Container -->
+                    <div id="questionsContainer">
+                        <!-- Questions will be added dynamically -->
+                    </div>
+                    
+                    <!-- Add Question Button -->
+                    <div class="add-question-btn" onclick="addQuestion()">
+                        <i data-lucide="plus" style="width: 2rem; height: 2rem; color: #71ad98; margin-bottom: 0.5rem;"></i>
+                        <div style="font-size: 1.125rem; font-weight: 500; color: #374151;">Add Question</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">Click to add a new multiple choice question</div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; padding: 2rem 0;">
+                        <button type="button" class="btn-secondary" onclick="window.location.href='/my-quizzes'">Cancel</button>
+                        <button type="button" class="btn-primary" onclick="saveQuiz()">Create Quiz</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let questionCount = 0;
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Lucide icons first
+            lucide.createIcons();
+            
+            // Check authentication
+            const token = localStorage.getItem('auth_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Update user name and setup dropdown
+            const userName = document.getElementById('userName');
+            if (userName && userInfo.full_name) {
+                userName.textContent = userInfo.full_name;
+                userName.style.display = 'inline';
+                
+                // Setup dropdown after setting name
+                setTimeout(setupUserDropdown, 100);
+            }
+            
+            // Setup JSON file import
+            const jsonFileInput = document.getElementById('jsonFileInput');
+            if (jsonFileInput) {
+                jsonFileInput.addEventListener('change', handleJsonImport);
+            }
+            
+            // Add first question by default
+            addQuestion();
+        });
+
+        // Dropdown functionality
+        function setupUserDropdown() {
+            const userName = document.querySelector('.user-name');
+            const userSection = document.querySelector('.user-info');
+            
+            if (!userName || !userSection) return;
+            
+            // Check if dropdown already exists
+            if (userSection.parentNode.classList.contains('user-dropdown')) return;
+            
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = 'dropdown-menu';
+            dropdownMenu.innerHTML = `
+                <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
+                <a href="/profile" class="dropdown-item">Profile</a>
+                <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
+                <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
+                <button class="dropdown-item" onclick="logout()">Logout</button>
+            `;
+            
+            const dropdownWrapper = document.createElement('div');
+            dropdownWrapper.className = 'user-dropdown';
+            
+            userSection.parentNode.insertBefore(dropdownWrapper, userSection);
+            dropdownWrapper.appendChild(userSection);
+            dropdownWrapper.appendChild(dropdownMenu);
+            
+            dropdownWrapper.addEventListener('mouseenter', () => {
+                dropdownMenu.classList.add('show');
+            });
+            
+            dropdownWrapper.addEventListener('mouseleave', () => {
+                dropdownMenu.classList.remove('show');
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/';
+        }
+
+        // Notification System
+        function showNotification(title, message, type = 'info') {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            notification.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        function addQuestion() {
+            questionCount++;
+            const questionsContainer = document.getElementById('questionsContainer');
+            
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.id = `question-${questionCount}`;
+            
+            questionCard.innerHTML = `
+                <div class="question-header">
+                    <span class="question-number">Question ${questionCount}</span>
+                    <button class="btn-danger" onclick="removeQuestion(${questionCount})" title="Delete Question">
+                        <i data-lucide="trash-2" style="width: 1rem; height: 1rem;"></i>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Question Text *</label>
+                    <textarea class="form-input form-textarea" placeholder="Enter your question..." required data-question="${questionCount}"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Answer Options</label>
+                    <div class="options-container">
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="A" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option A" data-option="A" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">A</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="B" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option B" data-option="B" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">B</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="C" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option C" data-option="C" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">C</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="D" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option D" data-option="D" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">D</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
+                        <i data-lucide="info" style="width: 0.875rem; height: 0.875rem; display: inline; margin-right: 0.25rem;"></i>
+                        Select the radio button next to the correct answer
+                    </p>
+                </div>
+            `;
+            
+            questionsContainer.appendChild(questionCard);
+            
+            // Add focus effect
+            const questionTextarea = questionCard.querySelector('textarea');
+            questionTextarea.addEventListener('focus', () => {
+                questionCard.classList.add('active');
+            });
+            
+            questionTextarea.addEventListener('blur', () => {
+                questionCard.classList.remove('active');
+            });
+            
+            // Re-initialize icons
+            lucide.createIcons();
+            
+            // Don't scroll automatically - let user stay at top
+        }
+
+        function removeQuestion(questionId) {
+            if (questionCount <= 1) {
+                showNotification('Cannot Delete', 'You must have at least one question in your quiz.', 'warning');
+                return;
+            }
+            
+            const questionCard = document.getElementById(`question-${questionId}`);
+            if (questionCard) {
+                questionCard.remove();
+                questionCount--;
+                
+                // Renumber remaining questions
+                renumberQuestions();
+            }
+        }
+
+        function renumberQuestions() {
+            const questionCards = document.querySelectorAll('.question-card');
+            questionCards.forEach((card, index) => {
+                const questionNumber = card.querySelector('.question-number');
+                if (questionNumber) {
+                    questionNumber.textContent = `Question ${index + 1}`;
+                }
+            });
+        }
+
+        async function saveQuiz() {
+            const title = document.getElementById('quizTitle').value.trim();
+            const description = document.getElementById('quizDescription').value.trim();
+            const topic = document.getElementById('quizTopic').value;
+            
+            if (!title) {
+                showNotification('Missing Title', 'Please enter a title for your quiz.', 'error');
+                return;
+            }
+            
+            if (!topic) {
+                showNotification('Missing Topic', 'Please select a topic for your quiz.', 'error');
+                return;
+            }
+            
+            // Collect all questions
+            const questions = [];
+            const questionCards = document.querySelectorAll('.question-card');
+            
+            for (let i = 0; i < questionCards.length; i++) {
+                const card = questionCards[i];
+                const questionText = card.querySelector('textarea').value.trim();
+                const optionA = card.querySelector('[data-option="A"]').value.trim();
+                const optionB = card.querySelector('[data-option="B"]').value.trim();
+                const optionC = card.querySelector('[data-option="C"]').value.trim();
+                const optionD = card.querySelector('[data-option="D"]').value.trim();
+                const correctAnswer = card.querySelector('input[type="radio"]:checked');
+                
+                if (!questionText) {
+                    showNotification('Missing Question', `Please enter text for question ${i + 1}.`, 'error');
+                    return;
+                }
+                
+                if (!optionA || !optionB || !optionC || !optionD) {
+                    showNotification('Missing Options', `Please fill in all options for question ${i + 1}.`, 'error');
+                    return;
+                }
+                
+                if (!correctAnswer) {
+                    showNotification('Missing Correct Answer', `Please select the correct answer for question ${i + 1}.`, 'error');
+                    return;
+                }
+                
+                questions.push({
+                    text: questionText,
+                    option_a: optionA,
+                    option_b: optionB,
+                    option_c: optionC,
+                    option_d: optionD,
+                    correct_option: correctAnswer.value
+                });
+            }
+            
+            if (questions.length === 0) {
+                showNotification('No Questions', 'Please add at least one question to your quiz.', 'error');
+                return;
+            }
+            
+            try {
+                // First create the quiz
+                const token = localStorage.getItem('auth_token');
+                const quizResponse = await fetch('/quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        topic: topic
+                    })
+                });
+                
+                if (!quizResponse.ok) {
+                    throw new Error('Failed to create quiz');
+                }
+                
+                const quiz = await quizResponse.json();
+                
+                // Then add questions
+                for (const question of questions) {
+                    const questionResponse = await fetch(`/quiz/${quiz.id}/question`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(question)
+                    });
+                    
+                    if (!questionResponse.ok) {
+                        throw new Error('Failed to add question');
+                    }
+                }
+                
+                showNotification('Quiz Created!', `"${title}" has been created successfully with ${questions.length} questions.`, 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/my-quizzes';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error creating quiz:', error);
+                showNotification('Error', 'Failed to create quiz. Please try again.', 'error');
+            }
+        }
+
+        // File Import Functions
+        function showJsonExample() {
+            const example = document.getElementById('jsonExample');
+            const isVisible = example.style.display !== 'none';
+            example.style.display = isVisible ? 'none' : 'block';
+        }
+
+        function clearImportedQuestions() {
+            if (confirm('Are you sure you want to clear all imported questions? This action cannot be undone.')) {
+                questionCount = 0;
+                document.getElementById('questionsContainer').innerHTML = '';
+                document.getElementById('jsonFileInput').value = '';
+                document.getElementById('clearQuestionsBtn').style.display = 'none';
+                showNotification('Questions Cleared', 'All imported questions have been removed.', 'success');
+            }
+        }
+
+        // Handle JSON file import - now handled in main DOMContentLoaded above
+
+        function handleJsonImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileName = file.name.toLowerCase();
+            
+            if (fileName.endsWith('.json')) {
+                handleJsonFile(file);
+            } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                handleExcelFile(file);
+            } else {
+                showNotification('Invalid File', 'Please select a valid JSON or Excel file.', 'error');
+                return;
+            }
+        }
+
+        function handleJsonFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    processImportedQuestions(jsonData.questions, 'JSON');
+                } catch (error) {
+                    console.error('JSON Import Error:', error);
+                    showNotification('Import Failed', `Error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleExcelFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    // Convert Excel format to our question format
+                    const questions = jsonData.map((row, index) => {
+                        if (!row.text || !row.option_a || !row.option_b || !row.option_c || !row.option_d || !row.correct_option) {
+                            throw new Error(`Row ${index + 2} is missing required columns`);
+                        }
+                        return {
+                            text: row.text,
+                            option_a: row.option_a,
+                            option_b: row.option_b,
+                            option_c: row.option_c,
+                            option_d: row.option_d,
+                            correct_option: row.correct_option.toString().toUpperCase()
+                        };
+                    });
+                    
+                    processImportedQuestions(questions, 'Excel');
+                } catch (error) {
+                    console.error('Excel Import Error:', error);
+                    showNotification('Import Failed', `Error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processImportedQuestions(questions, fileType) {
+            try {
+                // Validate questions array
+                if (!questions || !Array.isArray(questions)) {
+                    throw new Error(`${fileType} must contain a "questions" array`);
+                }
+
+                // Validate each question
+                for (let i = 0; i < questions.length; i++) {
+                    const q = questions[i];
+                    if (!q.text || !q.option_a || !q.option_b || !q.option_c || !q.option_d || !q.correct_option) {
+                        throw new Error(`Question ${i + 1} is missing required fields`);
+                    }
+                    if (!['A', 'B', 'C', 'D'].includes(q.correct_option)) {
+                        throw new Error(`Question ${i + 1} has invalid correct_option. Must be A, B, C, or D`);
+                    }
+                }
+
+                // Clear existing questions
+                questionCount = 0;
+                document.getElementById('questionsContainer').innerHTML = '';
+
+                // Import questions
+                questions.forEach(question => {
+                    addQuestionFromJson(question);
+                });
+
+                // Show clear button
+                document.getElementById('clearQuestionsBtn').style.display = 'inline-block';
+
+                showNotification('Success', `Imported ${questions.length} questions from ${fileType} file!`, 'success');
+                
+            } catch (error) {
+                console.error('Import Error:', error);
+                showNotification('Import Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function addQuestionFromJson(questionData) {
+            questionCount++;
+            const questionsContainer = document.getElementById('questionsContainer');
+            
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.id = `question-${questionCount}`;
+            
+            questionCard.innerHTML = `
+                <div class="question-header">
+                    <span class="question-number">Question ${questionCount}</span>
+                    <button class="btn-danger" onclick="removeQuestion(${questionCount})" title="Delete Question">
+                        <i data-lucide="trash-2" style="width: 1rem; height: 1rem;"></i>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Question Text *</label>
+                    <textarea class="form-input form-textarea" placeholder="Enter your question..." required data-question="${questionCount}">${questionData.text}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Answer Options</label>
+                    <div class="options-container">
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="A" class="option-radio" ${questionData.correct_option === 'A' ? 'checked' : ''}>
+                            <input type="text" class="option-input" placeholder="Option A" data-option="A" data-question="${questionCount}" value="${questionData.option_a}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">A</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="B" class="option-radio" ${questionData.correct_option === 'B' ? 'checked' : ''}>
+                            <input type="text" class="option-input" placeholder="Option B" data-option="B" data-question="${questionCount}" value="${questionData.option_b}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">B</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="C" class="option-radio" ${questionData.correct_option === 'C' ? 'checked' : ''}>
+                            <input type="text" class="option-input" placeholder="Option C" data-option="C" data-question="${questionCount}" value="${questionData.option_c}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">C</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="D" class="option-radio" ${questionData.correct_option === 'D' ? 'checked' : ''}>
+                            <input type="text" class="option-input" placeholder="Option D" data-option="D" data-question="${questionCount}" value="${questionData.option_d}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">D</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
+                        <i data-lucide="info" style="width: 0.875rem; height: 0.875rem; display: inline; margin-right: 0.25rem;"></i>
+                        Select the radio button next to the correct answer
+                    </p>
+                </div>
+            `;
+            
+            questionsContainer.appendChild(questionCard);
+            
+            // Add focus effect
+            const questionTextarea = questionCard.querySelector('textarea');
+            questionTextarea.addEventListener('focus', () => {
+                questionCard.classList.add('active');
+            });
+            
+            questionTextarea.addEventListener('blur', () => {
+                questionCard.classList.remove('active');
+            });
+            
+            // Re-initialize icons
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

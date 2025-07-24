@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Quizzes - Quiz App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .browse-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .main-content-container {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filters-section {
+            padding: 0;
+            margin-bottom: 0;
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-input {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #71ad98;
+            box-shadow: 0 0 0 3px rgba(113, 173, 152, 0.1);
+        }
+        
+        .search-input {
+            position: relative;
+        }
+        
+        .search-input input {
+            padding-left: 2.5rem;
+        }
+        
+        .search-input .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        
+        .view-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+        }
+        
+        .view-toggle button {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .view-toggle button.active {
+            background: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .results-info {
+            color: #6b7280;
+            font-weight: 600;
+        }
+        
+        .sort-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quiz-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quiz-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s;
+            border: 1px solid #f3f4f6;
+        }
+        
+        .quiz-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+            border-color: #71ad98;
+        }
+        
+        .quiz-card-header {
+            display: flex;
+            justify-content: between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .quiz-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        
+        .quiz-creator {
+            font-size: 0.875rem;
+            color: #71ad98;
+            font-weight: 500;
+        }
+        
+        .quiz-description {
+            color: #6b7280;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .quiz-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .quiz-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .quiz-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .btn-take-quiz {
+            background: #71ad98;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            flex: 1;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-take-quiz:hover {
+            background: #5d9a7f;
+        }
+        
+        .btn-preview {
+            background: transparent;
+            color: #71ad98;
+            border: 1px solid #71ad98;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-preview:hover {
+            background: #71ad98;
+            color: white;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: #f9fafb;
+            border-color: #71ad98;
+        }
+        
+        .pagination button.active {
+            background: #71ad98;
+            color: white;
+            border-color: #71ad98;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        
+        
+        .quiz-list-item {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+        
+        .quiz-list-content {
+            flex: 1;
+        }
+        
+        .quiz-list-actions {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-decoration-1"></div>
+        <div class="bg-decoration-2"></div>
+        <div class="content">
+            <header class="header">
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="logo-section" style="cursor: pointer;" onclick="window.location.href='/'">
+                            <div class="logo-icon"><i data-lucide="brain"></i></div>
+                            <h1 class="logo-text">Quiz App</h1>
+                        </div>
+                        <div class="user-section">
+                            <div class="user-info">
+                                <span class="user-name" id="userName">Guest</span>
+                                <div class="avatar" id="avatar"><i data-lucide="user"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main>
+                <div class="browse-container">
+                    <div style="text-align: center; margin-bottom: 3rem;">
+                        <h1 style="color: white; font-size: 2.5rem; margin-bottom: 0.5rem;">Browse All Quizzes</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.2rem;">Discover and take quizzes from the community</p>
+                    </div>
+
+                    <!-- Main Content Container -->
+                    <div class="main-content-container">
+                        <!-- Filters Section -->
+                        <div class="filters-section">
+                            <div class="filters-grid">
+                                <div class="filter-group">
+                                    <label class="filter-label">Search Quizzes</label>
+                                    <div class="search-input">
+                                        <i data-lucide="search" class="search-icon"></i>
+                                        <input type="text" id="searchInput" class="filter-input" placeholder="Search by title or description...">
+                                    </div>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Topic</label>
+                                    <select id="topicFilter" class="filter-input">
+                                        <option value="">All topics</option>
+                                        <option value="Science">Science</option>
+                                        <option value="Mathematics">Mathematics</option>
+                                        <option value="History">History</option>
+                                        <option value="Geography">Geography</option>
+                                        <option value="Literature">Literature</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Sports">Sports</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Art & Culture">Art & Culture</option>
+                                        <option value="Business">Business</option>
+                                        <option value="Health & Medicine">Health & Medicine</option>
+                                        <option value="General Knowledge">General Knowledge</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Questions</label>
+                                    <select id="questionsFilter" class="filter-input">
+                                        <option value="">Any number</option>
+                                        <option value="1-5">1-5 questions</option>
+                                        <option value="6-10">6-10 questions</option>
+                                        <option value="11-20">11-20 questions</option>
+                                        <option value="20+">20+ questions</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Created</label>
+                                    <select id="dateFilter" class="filter-input">
+                                        <option value="">Any time</option>
+                                        <option value="today">Today</option>
+                                        <option value="week">This week</option>
+                                        <option value="month">This month</option>
+                                        <option value="year">This year</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">View</label>
+                                    <div class="view-toggle">
+                                        <button id="gridView" class="active" onclick="setView('grid')">
+                                            <i data-lucide="grid-3x3" style="width: 1rem; height: 1rem;"></i>
+                                        </button>
+                                        <button id="listView" onclick="setView('list')">
+                                            <i data-lucide="list" style="width: 1rem; height: 1rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div style="border-top: 1px solid #e5e7eb; margin: 2rem 0;"></div>
+
+                        <!-- Results Header -->
+                        <div class="results-header">
+                            <div class="results-info" id="resultsInfo">
+                                Loading quizzes...
+                            </div>
+                            <select id="sortSelect" class="sort-select">
+                                <option value="newest">Newest first</option>
+                                <option value="oldest">Oldest first</option>
+                                <option value="title">Title A-Z</option>
+                                <option value="questions">Most questions</option>
+                            </select>
+                        </div>
+
+                        <!-- Quizzes Container -->
+                        <div id="quizzesContainer" class="quiz-grid">
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: #6b7280;">
+                                <i data-lucide="loader" style="width: 2rem; height: 2rem; animation: spin 1s linear infinite; opacity: 0.7;"></i>
+                                <p style="margin-top: 1rem; font-size: 1rem;">Loading quizzes...</p>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="pagination" id="pagination" style="display: none;">
+                            <!-- Pagination buttons will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        let allQuizzes = [];
+        let filteredQuizzes = [];
+        let currentPage = 1;
+        let itemsPerPage = 12;
+        let currentView = 'grid';
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Lucide icons first
+            lucide.createIcons();
+            
+            // Check authentication
+            const token = localStorage.getItem('auth_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Update user name and setup dropdown
+            const userName = document.getElementById('userName');
+            if (userName && userInfo.full_name) {
+                userName.textContent = userInfo.full_name;
+                userName.style.display = 'inline';
+                
+                // Setup dropdown after setting name
+                setTimeout(setupUserDropdown, 100);
+            }
+            
+            // Load all quizzes
+            loadQuizzes();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        // Dropdown functionality
+        function setupUserDropdown() {
+            const userName = document.querySelector('.user-name');
+            const userSection = document.querySelector('.user-info');
+            
+            if (!userName || !userSection) return;
+            
+            // Check if dropdown already exists
+            if (userSection.parentNode.classList.contains('user-dropdown')) return;
+            
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = 'dropdown-menu';
+            dropdownMenu.innerHTML = `
+                <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
+                <a href="/profile" class="dropdown-item">Profile</a>
+                <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
+                <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
+                <button class="dropdown-item" onclick="logout()">Logout</button>
+            `;
+            
+            const dropdownWrapper = document.createElement('div');
+            dropdownWrapper.className = 'user-dropdown';
+            
+            userSection.parentNode.insertBefore(dropdownWrapper, userSection);
+            dropdownWrapper.appendChild(userSection);
+            dropdownWrapper.appendChild(dropdownMenu);
+            
+            dropdownWrapper.addEventListener('mouseenter', () => {
+                dropdownMenu.classList.add('show');
+            });
+            
+            dropdownWrapper.addEventListener('mouseleave', () => {
+                dropdownMenu.classList.remove('show');
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/';
+        }
+
+        function setupEventListeners() {
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+            
+            // Filter selects
+            document.getElementById('topicFilter').addEventListener('change', applyFilters);
+            document.getElementById('questionsFilter').addEventListener('change', applyFilters);
+            document.getElementById('dateFilter').addEventListener('change', applyFilters);
+            document.getElementById('sortSelect').addEventListener('change', applyFilters);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function loadQuizzes() {
+            try {
+                const response = await fetch('/quiz');
+                
+                if (response.ok) {
+                    allQuizzes = await response.json();
+                    filteredQuizzes = [...allQuizzes];
+                    applyFilters();
+                } else {
+                    throw new Error('Failed to load quizzes');
+                }
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+                const container = document.getElementById('quizzesContainer');
+                container.className = 'quiz-grid';
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: #ef4444;">
+                        <i data-lucide="alert-circle" style="width: 2rem; height: 2rem; margin-bottom: 1rem; opacity: 0.7;"></i>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Error loading quizzes</p>
+                        <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1.5rem;">Please try again</p>
+                        <button onclick="loadQuizzes()" style="background: #71ad98; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.9rem;">
+                            Retry
+                        </button>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const topicFilter = document.getElementById('topicFilter').value;
+            const questionsFilter = document.getElementById('questionsFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const sortBy = document.getElementById('sortSelect').value;
+            
+            // Start with all quizzes
+            filteredQuizzes = [...allQuizzes];
+            
+            // Apply search filter
+            if (searchTerm) {
+                filteredQuizzes = filteredQuizzes.filter(quiz => 
+                    quiz.title.toLowerCase().includes(searchTerm) ||
+                    (quiz.description && quiz.description.toLowerCase().includes(searchTerm)) ||
+                    (quiz.creator_name && quiz.creator_name.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Apply topic filter
+            if (topicFilter) {
+                filteredQuizzes = filteredQuizzes.filter(quiz => quiz.topic === topicFilter);
+            }
+            
+            // Apply questions filter
+            if (questionsFilter) {
+                filteredQuizzes = filteredQuizzes.filter(quiz => {
+                    const count = quiz.question_count;
+                    switch (questionsFilter) {
+                        case '1-5': return count >= 1 && count <= 5;
+                        case '6-10': return count >= 6 && count <= 10;
+                        case '11-20': return count >= 11 && count <= 20;
+                        case '20+': return count > 20;
+                        default: return true;
+                    }
+                });
+            }
+            
+            // Apply date filter
+            if (dateFilter) {
+                const now = new Date();
+                filteredQuizzes = filteredQuizzes.filter(quiz => {
+                    const quizDate = new Date(quiz.created_at);
+                    switch (dateFilter) {
+                        case 'today':
+                            return quizDate.toDateString() === now.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            return quizDate >= weekAgo;
+                        case 'month':
+                            const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                            return quizDate >= monthAgo;
+                        case 'year':
+                            const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+                            return quizDate >= yearAgo;
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            // Apply sorting
+            filteredQuizzes.sort((a, b) => {
+                switch (sortBy) {
+                    case 'newest':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'oldest':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'title':
+                        return a.title.localeCompare(b.title);
+                    case 'questions':
+                        return b.question_count - a.question_count;
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            
+            // Update display
+            updateResultsInfo();
+            displayQuizzes();
+            updatePagination();
+        }
+
+        function updateResultsInfo() {
+            const total = filteredQuizzes.length;
+            const start = (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, total);
+            
+            document.getElementById('resultsInfo').textContent = 
+                total === 0 ? 'No quizzes found' : 
+                total === 1 ? '1 quiz found' :
+                `Showing ${start}-${end} of ${total} quizzes`;
+        }
+
+        function displayQuizzes() {
+            const container = document.getElementById('quizzesContainer');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const quizzesToShow = filteredQuizzes.slice(start, end);
+            
+            if (quizzesToShow.length === 0) {
+                container.className = 'quiz-grid';
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: #6b7280;">
+                        <i data-lucide="search" style="width: 2rem; height: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600;">No quizzes found</p>
+                        <p style="font-size: 0.9rem; opacity: 0.7;">Try adjusting your search or filters</p>
+                    </div>
+                `;
+            } else {
+                container.className = currentView === 'grid' ? 'quiz-grid' : 'quiz-list';
+                container.innerHTML = quizzesToShow.map(quiz => {
+                    const createdDate = new Date(quiz.created_at).toLocaleDateString('he-IL').replace(/\./g, '/');
+                    const creatorName = quiz.creator_name || 'Unknown Creator';
+                    
+                    if (currentView === 'grid') {
+                        return `
+                            <div class="quiz-card">
+                                <div class="quiz-card-header">
+                                    <div style="flex: 1;">
+                                        <h3 class="quiz-title">${quiz.title}</h3>
+                                        <div class="quiz-creator">by ${creatorName}</div>
+                                    </div>
+                                </div>
+                                
+                                <p class="quiz-description">${quiz.description || 'No description provided'}</p>
+                                
+                                <div class="quiz-stats">
+                                    <div class="quiz-stat">
+                                        <i data-lucide="tag" style="width: 1rem; height: 1rem;"></i>
+                                        <span>${quiz.topic || 'General'}</span>
+                                    </div>
+                                    <div class="quiz-stat">
+                                        <i data-lucide="help-circle" style="width: 1rem; height: 1rem;"></i>
+                                        <span>${quiz.question_count} questions</span>
+                                    </div>
+                                    <div class="quiz-stat">
+                                        <i data-lucide="calendar" style="width: 1rem; height: 1rem;"></i>
+                                        <span>${createdDate}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="quiz-actions">
+                                    <button class="btn-take-quiz" onclick="takeQuiz(${quiz.id})">
+                                        Take Quiz
+                                    </button>
+                                    <button class="btn-preview" onclick="previewQuiz(${quiz.id})">
+                                        Preview
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="quiz-card quiz-list-item">
+                                <div class="quiz-list-content">
+                                    <h3 class="quiz-title">${quiz.title}</h3>
+                                    <div class="quiz-creator" style="margin-bottom: 0.5rem;">by ${creatorName}</div>
+                                    <p class="quiz-description" style="margin-bottom: 0.5rem;">${quiz.description || 'No description provided'}</p>
+                                    <div class="quiz-stats">
+                                        <div class="quiz-stat">
+                                            <i data-lucide="tag" style="width: 1rem; height: 1rem;"></i>
+                                            <span>${quiz.topic || 'General'}</span>
+                                        </div>
+                                        <div class="quiz-stat">
+                                            <i data-lucide="help-circle" style="width: 1rem; height: 1rem;"></i>
+                                            <span>${quiz.question_count} questions</span>
+                                        </div>
+                                        <div class="quiz-stat">
+                                            <i data-lucide="calendar" style="width: 1rem; height: 1rem;"></i>
+                                            <span>${createdDate}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="quiz-list-actions">
+                                    <div class="quiz-actions" style="flex-direction: column; min-width: 120px;">
+                                        <button class="btn-take-quiz" onclick="takeQuiz(${quiz.id})" style="margin-bottom: 0.5rem;">
+                                            Take Quiz
+                                        </button>
+                                        <button class="btn-preview" onclick="previewQuiz(${quiz.id})">
+                                            Preview
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            }
+            
+            lucide.createIcons();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredQuizzes.length / itemsPerPage);
+            const paginationContainer = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+            
+            paginationContainer.style.display = 'flex';
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i data-lucide="chevron-left" style="width: 1rem; height: 1rem;"></i>
+                </button>
+            `;
+            
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                paginationHTML += `<button onclick="changePage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHTML += `<span style="padding: 0.5rem;">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button onclick="changePage(${i})" ${i === currentPage ? 'class="active"' : ''}>
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<span style="padding: 0.5rem;">...</span>`;
+                }
+                paginationHTML += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <i data-lucide="chevron-right" style="width: 1rem; height: 1rem;"></i>
+                </button>
+            `;
+            
+            paginationContainer.innerHTML = paginationHTML;
+            lucide.createIcons();
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredQuizzes.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            updateResultsInfo();
+            displayQuizzes();
+            updatePagination();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setView(viewType) {
+            currentView = viewType;
+            
+            // Update button states
+            document.getElementById('gridView').classList.toggle('active', viewType === 'grid');
+            document.getElementById('listView').classList.toggle('active', viewType === 'list');
+            
+            // Adjust items per page for list view
+            itemsPerPage = viewType === 'grid' ? 12 : 8;
+            currentPage = 1;
+            
+            updateResultsInfo();
+            displayQuizzes();
+            updatePagination();
+        }
+
+        function takeQuiz(quizId) {
+            window.location.href = `/quiz/${quizId}/take`;
+        }
+
+        function previewQuiz(quizId) {
+            window.location.href = `/quiz/${quizId}/preview`;
+        }
+
+        // Add CSS for loading animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

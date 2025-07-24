@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+ <html lang="en">
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>Quiz Preview - Quiz App</title>
+     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+     <link
+       href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
+       rel="stylesheet"
+     />
+     <link
+       rel="stylesheet"
+       href="{{ url_for('static', filename='css/styles.css') }}"
+     />
+     <style>
+       .quiz-container {
+         max-width: 800px;
+         margin: 0 auto;
+         padding: 2rem 1rem;
+       }
+ 
+       .quiz-header {
+         background: white;
+         border-radius: 1rem;
+         padding: 2rem;
+         margin-bottom: 2rem;
+         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+         text-align: center;
+       }
+ 
+       .quiz-progress {
+         background: #f1f5f9;
+         border-radius: 1rem;
+         height: 8px;
+         margin: 1rem 0;
+         overflow: hidden;
+         display: none; /* Hide progress bar in preview */
+       }
+ 
+       .quiz-progress-bar {
+         background: linear-gradient(90deg, #71ad98, #5d9a7f);
+         height: 100%;
+         transition: width 0.3s ease;
+         border-radius: 1rem;
+       }
+ 
+       .question-card {
+         background: white;
+         border-radius: 1rem;
+         padding: 2rem;
+         margin-bottom: 2rem;
+         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+       }
+ 
+       .question-number {
+         background: #71ad98;
+         color: white;
+         padding: 0.5rem 1rem;
+         border-radius: 2rem;
+         font-size: 0.875rem;
+         font-weight: 600;
+         display: inline-block;
+         margin-bottom: 1rem;
+       }
+ 
+       .question-text {
+         font-size: 1.25rem;
+         font-weight: 600;
+         color: #374151;
+         margin-bottom: 2rem;
+         line-height: 1.6;
+       }
+ 
+       .options-container {
+         display: grid;
+         gap: 1rem;
+       }
+ 
+       .option {
+         padding: 1rem 1.5rem;
+         border: 2px solid #e5e7eb;
+         border-radius: 0.75rem;
+         /* cursor: pointer; */ /* No cursor for preview */
+         transition: all 0.3s ease;
+         background: white;
+         display: flex;
+         align-items: center;
+         gap: 1rem;
+         font-size: 1rem;
+         position: relative;
+         overflow: hidden;
+       }
+ 
+       /* No hover effects for preview */
+       /* .option::before {
+         content: "";
+         position: absolute;
+         top: 0;
+         left: -100%;
+         width: 100%;
+         height: 100%;
+         background: linear-gradient(
+           90deg,
+           transparent,
+           rgba(113, 173, 152, 0.1),
+           transparent
+         );
+         transition: left 0.5s ease;
+       }
+ 
+       .option:hover::before {
+         left: 100%;
+       }
+ 
+       .option:hover {
+         border-color: #71ad98;
+         transform: translateY(-2px);
+         box-shadow: 0 4px 12px rgba(113, 173, 152, 0.2);
+       } */
+ 
+       .option-letter {
+         background: #f3f4f6;
+         color: #374151;
+         width: 2.5rem;
+         height: 2.5rem;
+         border-radius: 50%;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         font-weight: 700;
+         font-size: 1.1rem;
+         flex-shrink: 0;
+       }
+ 
+       .feedback,
+       .next-button {
+         display: none !important; /* Hide feedback and next button in preview */
+       }
+ 
+       .quiz-results {
+         display: none !important; /* Hide the entire results section */
+       }
+ 
+       .score-circle {
+         display: none; /* Hide score circle in preview */
+       }
+ 
+       .results-actions {
+         display: none !important; /* Hide results actions */
+       }
+ 
+       .btn-primary {
+         background: #71ad98;
+         color: white;
+         padding: 0.75rem 2rem;
+         border: none;
+         border-radius: 0.75rem;
+         cursor: pointer;
+         font-size: 1rem;
+         font-weight: 600;
+         text-decoration: none;
+         display: inline-flex;
+         align-items: center;
+         gap: 0.5rem;
+         transition: all 0.3s ease;
+       }
+ 
+       .btn-primary:hover {
+         background: #5d9a7f;
+         transform: translateY(-2px);
+         box-shadow: 0 4px 12px rgba(113, 173, 152, 0.3);
+       }
+ 
+       .btn-secondary {
+         background: transparent;
+         color: #71ad98;
+         border: 2px solid #71ad98;
+         padding: 0.75rem 2rem;
+         border-radius: 0.75rem;
+         cursor: pointer;
+         font-size: 1rem;
+         font-weight: 600;
+         text-decoration: none;
+         display: inline-flex;
+         align-items: center;
+         gap: 0.5rem;
+         transition: all 0.3s ease;
+       }
+ 
+       .btn-secondary:hover {
+         background: #71ad98;
+         color: white;
+         transform: translateY(-2px);
+       }
+     </style>
+   </head>
+   <body>
+     <div class="app">
+       <div class="bg-decoration-1"></div>
+       <div class="bg-decoration-2"></div>
+       <div class="content">
+         <header class="header">
+           <div class="header-container">
+             <div class="header-content">
+               <div
+                 class="logo-section"
+                 style="cursor: pointer"
+                 onclick="window.location.href='/'"
+               >
+                 <div class="logo-icon"><i data-lucide="brain"></i></div>
+                 <h1 class="logo-text">Quiz App</h1>
+               </div>
+               <div class="user-section">
+                 <div class="user-info">
+                   <span class="user-name" id="userName">Guest</span>
+                   <div class="avatar" id="avatar">
+                     <i data-lucide="user"></i>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </header>
+ 
+         <main>
+           <div class="quiz-container">
+             <div class="quiz-header">
+               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                 <div style="flex: 1;">
+                   <h1 id="quizTitle" style="margin: 0;">Loading Quiz Preview...</h1>
+                 </div>
+                 <button onclick="window.location.href='/browse-quizzes'" style="background: white; color: #71ad98; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                   <i data-lucide="arrow-left" style="width: 1rem; height: 1rem;"></i>
+                   Back to Browse
+                 </button>
+               </div>
+               <p id="quizDescription">
+                 Please wait while we load the quiz data for preview.
+               </p>
+               <div class="quiz-progress">
+                 <div
+                   class="quiz-progress-bar"
+                   id="progressBar"
+                   style="width: 0%"
+                 ></div>
+               </div>
+               <div
+                 style="
+                   display: flex;
+                   justify-content: space-between;
+                   align-items: center;
+                   margin-top: 1rem;
+                   display: none; /* Hide progress text and score in preview */
+                 "
+               >
+                 <span id="questionProgress">Question 0 of 0</span>
+                 <span id="scoreDisplay">Score: 0/0</span>
+               </div>
+             </div>
+ 
+             <div id="questionsContainer">
+               </div>
+ 
+           </div>
+         </main>
+       </div>
+     </div>
+ 
+     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+     <script>
+       const quizId = parseInt('{{ quiz_id }}');
+       let quizData = {};
+ 
+       document.addEventListener('DOMContentLoaded', function () {
+           lucide.createIcons();
+ 
+           // Check authentication
+           const token = localStorage.getItem('auth_token');
+           const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+ 
+           if (!token) {
+               window.location.href = '/login';
+               return;
+           }
+ 
+           // Update user name and setup dropdown
+           const userName = document.getElementById('userName');
+           if (userName && userInfo.full_name) {
+               userName.textContent = userInfo.full_name;
+               userName.style.display = 'inline';
+               setTimeout(setupUserDropdown, 100);
+           }
+ 
+           // Load quiz data
+           loadQuizData();
+       });
+ 
+       // Dropdown functionality
+       function setupUserDropdown() {
+           const userName = document.querySelector('.user-name');
+           const userSection = document.querySelector('.user-info');
+ 
+           if (!userName || !userSection) return;
+           if (userSection.parentNode.classList.contains('user-dropdown')) return;
+ 
+           const dropdownMenu = document.createElement('div');
+           dropdownMenu.className = 'dropdown-menu';
+           dropdownMenu.innerHTML = `
+               <a href="/dashboard" class="dropdown-item">Dashboard</a>
+               <a href="/profile" class="dropdown-item">Profile</a>
+               <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
+               <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
+               <button class="dropdown-item" onclick="logout()">Logout</button>
+           `;
+ 
+           const dropdownWrapper = document.createElement('div');
+           dropdownWrapper.className = 'user-dropdown';
+ 
+           userSection.parentNode.insertBefore(dropdownWrapper, userSection);
+           dropdownWrapper.appendChild(userSection);
+           dropdownWrapper.appendChild(dropdownMenu);
+ 
+           dropdownWrapper.addEventListener('mouseenter', () => {
+               dropdownMenu.classList.add('show');
+           });
+ 
+           dropdownWrapper.addEventListener('mouseleave', () => {
+               dropdownMenu.classList.remove('show');
+           });
+       }
+ 
+       function logout() {
+           localStorage.removeItem('auth_token');
+           localStorage.removeItem('user_info');
+           window.location.href = '/';
+       }
+ 
+       async function loadQuizData() {
+           try {
+               const token = localStorage.getItem('auth_token');
+               const response = await fetch(`/quiz/${quizId}`, {
+                   headers: {
+                       'Authorization': `Bearer ${token}`
+                   }
+               });
+ 
+               if (response.ok) {
+                   quizData = await response.json();
+                   initializePreview();
+               } else {
+                   throw new Error('Failed to load quiz data');
+               }
+           } catch (error) {
+               console.error('Error loading quiz:', error);
+               document.getElementById('quizTitle').textContent = 'Error Loading Quiz';
+               document.getElementById('quizDescription').textContent = 'Sorry, we could not load this quiz. Please try again later.';
+           }
+       }
+ 
+       function initializePreview() {
+           document.getElementById('quizTitle').textContent = quizData.title;
+           document.getElementById('quizDescription').textContent = quizData.description || 'Preview of quiz questions';
+ 
+           const questionsContainer = document.getElementById('questionsContainer');
+           questionsContainer.innerHTML = ''; // Clear previous content
+ 
+           if (!quizData.questions || quizData.questions.length === 0) {
+               document.getElementById('quizTitle').textContent = 'No Questions Available';
+               document.getElementById('quizDescription').textContent = 'This quiz does not have any questions yet.';
+               questionsContainer.innerHTML = `
+                 <div class="question-card">
+                     <p style="text-align: center; color: #6b7280;">To add questions, please edit the quiz.</p>
+                 </div>
+               `;
+           } else {
+               displayAllQuestions();
+           }
+       }
+ 
+       function displayAllQuestions() {
+           const questionsContainer = document.getElementById('questionsContainer');
+           quizData.questions.forEach((question, index) => {
+               const questionCard = document.createElement('div');
+               questionCard.className = 'question-card';
+               questionCard.innerHTML = `
+                   <div class="question-number">Question ${index + 1}</div>
+                   <div class="question-text">${question.text}</div>
+ 
+                   <div class="options-container">
+                       <div class="option">
+                           <div class="option-letter">A</div>
+                           <div>${question.option_a}</div>
+                       </div>
+                       <div class="option">
+                           <div class="option-letter">B</div>
+                           <div>${question.option_b}</div>
+                       </div>
+                       <div class="option">
+                           <div class="option-letter">C</div>
+                           <div>${question.option_c}</div>
+                       </div>
+                       <div class="option">
+                           <div class="option-letter">D</div>
+                           <div>${question.option_d}</div>
+                       </div>
+                   </div>
+               `;
+               questionsContainer.appendChild(questionCard);
+           });
+ 
+           lucide.createIcons();
+       }
+     </script>
+   </body>
+ </html>

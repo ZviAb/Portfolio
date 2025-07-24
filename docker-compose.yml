@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:15
+    profiles:
+    - "app"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-quiz-backend
+
+  nginx:
+    build: 
+      context: .
+      dockerfile: Dockerfile.nginx
+    profiles:
+    - "app"
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - app-quiz-frontend
+
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+    - "app"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    networks:
+      - app-quiz-backend
+      - app-quiz-frontend
+  
+  unit-test:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    profiles:
+      - "unit-test"
+    environment:
+      DATABASE_URL: "sqlite:///:memory:"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    command: ["python", "tests/unit_test.py"]
+
+  e2e:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    profiles:
+      - "e2e"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    networks:
+      - app-quiz-backend
+    command: ["python", "tests/e2e.py"]
+
+volumes:
+  postgres_data:
+
+networks:
+  app-quiz-frontend:
+  app-quiz-backend:
