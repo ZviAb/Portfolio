@@ -15,27 +15,6 @@ spec:
     helm:
       values: |
         logLevel: info
-        # luaScripts:
-        #   setIndex.lua: |
-        #     function set_index(tag, timestamp, record)
-        #         index = "dakar-"
-        #         if record["kubernetes"] ~= nil then
-        #             if record["kubernetes"]["namespace_name"] ~= nil then
-        #                 if record["kubernetes"]["container_name"] ~= nil then
-        #                     record["es_index"] = index
-        #                         .. record["kubernetes"]["namespace_name"]
-        #                         .. "-"
-        #                         .. record["kubernetes"]["container_name"]
-        #                     return 1, timestamp, record
-        #                 end
-        #                 record["es_index"] = index
-        #                     .. record["kubernetes"]["namespace_name"]
-        #                 return 1, timestamp, record
-        #             end
-        #         end
-        #         return 1, timestamp, record
-        #     end
-        ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/configuration-file
         config:
           service: |
             [SERVICE]
@@ -54,21 +33,22 @@ spec:
           inputs: |
             [INPUT]
                 Name tail
-                Path /var/log/containers/rando*.log
+                Path /var/log/containers/*.log
                 multiline.parser docker, cri
                 Tag kube.*
                 Mem_Buf_Limit 100MB
                 Skip_Long_Lines On
-            
+                Refresh_Interval 5
+                
             [INPUT]
-                Name  tail
-                Path  /var/log/containers/*nginx*.log
+                Name tail
+                Path /var/log/containers/*quiz-app*.log
                 multiline.parser docker, cri
-                Parser nginx_ingress
-                Tag    kube.nginx
-                Mem_Buf_Limit 100MB
+                Tag quizapp.*
+                Mem_Buf_Limit 50MB
                 Skip_Long_Lines On
-
+                Refresh_Interval 5
+            
             [INPUT]
                 Name systemd
                 Tag host.*
@@ -84,15 +64,38 @@ spec:
                 Keep_Log Off
                 Buffer_Size False
                 K8S-Logging.Parser On
-            
+                
             [FILTER]
                 Name kubernetes
-                Match kube.nginx
+                Match quizapp.*
                 Merge_Log On
                 Keep_Log Off
                 Buffer_Size False
                 K8S-Logging.Parser On
+                
+            [FILTER]
+                Name parser
+                Match quizapp.*
+                Key_Name log
+                Parser quiz_app_json
+                Reserve_Data On
+                Preserve_Key On
             
+            
+            
+          customParsers: |
+            [PARSER]
+                Name quiz_app_json
+                Format json
+                Time_Key timestamp
+                Time_Format %Y-%m-%dT%H:%M:%S.%f
+                
+            [PARSER]
+                Name quiz_app_events
+                Format json
+                Time_Key timestamp
+                Time_Format %Y-%m-%dT%H:%M:%S.%f
+
           ## https://docs.fluentbit.io/manual/pipeline/outputs
           outputs: |
             [OUTPUT]
@@ -111,21 +114,6 @@ spec:
                 Retry_Limit False
                 Suppress_Type_Name On
 
-            [OUTPUT]
-                Name es
-                Match kube.nginx
-                Index fluent-bit
-                Type  _doc
-                Host elasticsearch-master
-                Port 9200
-                HTTP_User elastic
-                HTTP_Passwd 9fVpTSmmeC3IzEiE
-                tls Off
-                tls.verify Off
-                Logstash_Format On
-                Logstash_Prefix logstash
-                Retry_Limit False
-                Suppress_Type_Name On
 
             [OUTPUT]
                 Name es
@@ -143,13 +131,21 @@ spec:
                 Retry_Limit False
                 Suppress_Type_Name On
 
-        customParsers: |
-          [PARSER]
-              Name   nginx_ingress
-              Format regex
-              Regex  ^(?<remote_addr>[^ ]+)\s+-\s+(?<remote_user>[^ ]*)\s+\[(?<time_local>[^\]]+)\]\s+"(?<method>\S+)\s+(?<uri>\S+)\s+(?<protocol>[^"]+)"\s+(?<status>\d{3})\s+(?<body_bytes_sent>\d+)\s+"(?<http_referer>[^"]*)"\s+"(?<http_user_agent>[^"]*)"\s+(?<request_length>\d+)\s+(?<request_time>[0-9.]+)\s+\[(?<upstream_name>[^\]]*)\]\s+\[(?<upstream_alt_name>[^\]]*)\]\s+(?<upstream_addr>[^\s]+)\s+(?<upstream_response_length>\d+)\s+(?<upstream_response_time>[0-9.]+)\s+(?<upstream_status>\d{3})\s+(?<request_id>[a-f0-9]+)
-              Time_Key time_local
-              Time_Format %d/%b/%Y:%H:%M:%S %z
+            [OUTPUT]
+                Name es
+                Match quizapp.*
+                Index quiz-app-logs
+                Type  _doc
+                Host elasticsearch-master
+                Port 9200
+                HTTP_User elastic
+                HTTP_Passwd 9fVpTSmmeC3IzEiE
+                tls Off
+                tls.verify Off
+                Logstash_Format On
+                Logstash_Prefix quiz-app
+                Retry_Limit False
+                Suppress_Type_Name On
 
   destination:
     server: https://kubernetes.default.svc
