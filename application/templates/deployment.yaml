@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+  namespace: {{ .Values.namespaces.application }}
+spec:
+  replicas: {{ .Values.app.ReplicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.AppName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.AppName }}
+    spec:
+      containers:
+      - name: {{ .Values.app.AppName }}
+        image: {{ .Values.app.image.name }}:{{ .Values.app.image.tag }}
+        env:
+          - name: JWT_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: quizapp-db-secret
+                key: jwtSecret
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: quizapp-db-secret
+                key: password
+          - name: DATABASE_URL
+            value: {{ .Values.app.uri | quote }}
+        ports:
+        - containerPort: {{ .Values.app.port }}
+        resources:
+          {{- toYaml .Values.app.resources | nindent 10 }}
