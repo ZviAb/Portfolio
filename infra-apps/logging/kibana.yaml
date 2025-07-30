@@ -14,13 +14,24 @@ spec:
         elasticsearchHosts: "http://elasticsearch-master.logging.svc.cluster.local:9200"
         protocol: "http"
 
-        security:
-          enabled: false
-        
+        extraEnvs:
+          - name: ELASTICSEARCH_USERNAME
+            value: "elastic"
+          - name: ELASTICSEARCH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: logging-secret
+                key: password
+
+        kibanaConfig:
+          kibana.yml: |
+            elasticsearch.username: "elastic"
+            elasticsearch.password: "${ELASTICSEARCH_PASSWORD}"
+
         resources:
           requests:
             cpu: "100m"
-            memory: "512M"
+            memory: "512Mi"
           limits:
             cpu: "1000m"
             memory: "1Gi"

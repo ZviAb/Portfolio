@@ -15,6 +15,18 @@ spec:
     helm:
       values: |
         logLevel: info
+        env:
+          - name: FLUENT_ES_USER
+            valueFrom:
+              secretKeyRef:
+                name: logging-secret
+                key: username
+          - name: FLUENT_ES_PASS
+            valueFrom:
+              secretKeyRef:
+                name: logging-secret
+                key: password
+
         config:
           service: |
             [SERVICE]
@@ -29,7 +41,6 @@ spec:
                 Health_Check On
                 Trace_Error On
 
-          ## https://docs.fluentbit.io/manual/pipeline/inputs
           inputs: |
             [INPUT]
                 Name tail
@@ -39,7 +50,7 @@ spec:
                 Mem_Buf_Limit 100MB
                 Skip_Long_Lines On
                 Refresh_Interval 5
-                
+
             [INPUT]
                 Name tail
                 Path /var/log/containers/*quiz-app*.log
@@ -48,14 +59,13 @@ spec:
                 Mem_Buf_Limit 50MB
                 Skip_Long_Lines On
                 Refresh_Interval 5
-            
+
             [INPUT]
                 Name systemd
                 Tag host.*
                 Systemd_Filter _SYSTEMD_UNIT=kubelet.service
                 Read_From_Tail On
 
-          ## https://docs.fluentbit.io/manual/pipeline/filters
           filters: |
             [FILTER]
                 Name kubernetes
@@ -64,7 +74,7 @@ spec:
                 Keep_Log Off
                 Buffer_Size False
                 K8S-Logging.Parser On
-                
+
             [FILTER]
                 Name kubernetes
                 Match quizapp.*
@@ -72,7 +82,7 @@ spec:
                 Keep_Log Off
                 Buffer_Size False
                 K8S-Logging.Parser On
-                
+
             [FILTER]
                 Name parser
                 Match quizapp.*
@@ -80,23 +90,20 @@ spec:
                 Parser quiz_app_json
                 Reserve_Data On
                 Preserve_Key On
-            
-            
-            
+
           customParsers: |
             [PARSER]
                 Name quiz_app_json
                 Format json
                 Time_Key timestamp
                 Time_Format %Y-%m-%dT%H:%M:%S.%f
-                
+
             [PARSER]
                 Name quiz_app_events
                 Format json
                 Time_Key timestamp
                 Time_Format %Y-%m-%dT%H:%M:%S.%f
 
-          ## https://docs.fluentbit.io/manual/pipeline/outputs
           outputs: |
             [OUTPUT]
                 Name es
@@ -105,15 +112,14 @@ spec:
                 Type  _doc
                 Host elasticsearch-master
                 Port 9200
-                HTTP_User elastic
-                HTTP_Passwd 9fVpTSmmeC3IzEiE
+                HTTP_User ${FLUENT_ES_USER}
+                HTTP_Passwd ${FLUENT_ES_PASS}
                 tls Off
                 tls.verify Off
                 Logstash_Format On
                 Logstash_Prefix logstash
                 Retry_Limit False
                 Suppress_Type_Name On
-
 
             [OUTPUT]
                 Name es
@@ -122,8 +128,8 @@ spec:
                 Type  _doc
                 Host elasticsearch-master
                 Port 9200
-                HTTP_User elastic
-                HTTP_Passwd 9fVpTSmmeC3IzEiE
+                HTTP_User ${FLUENT_ES_USER}
+                HTTP_Passwd ${FLUENT_ES_PASS}
                 tls Off
                 tls.verify Off
                 Logstash_Format On
@@ -138,8 +144,8 @@ spec:
                 Type  _doc
                 Host elasticsearch-master
                 Port 9200
-                HTTP_User elastic
-                HTTP_Passwd 9fVpTSmmeC3IzEiE
+                HTTP_User ${FLUENT_ES_USER}
+                HTTP_Passwd ${FLUENT_ES_PASS}
                 tls Off
                 tls.verify Off
                 Logstash_Format On
