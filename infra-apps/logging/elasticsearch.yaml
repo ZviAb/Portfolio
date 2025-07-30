@@ -24,7 +24,7 @@ spec:
             memory: "1Gi"
 
         volumeClaimTemplate:
-          storageClassName: standard
+          storageClassName: gp3
           accessModes: [ "ReadWriteOnce" ]
           resources:
             requests:
