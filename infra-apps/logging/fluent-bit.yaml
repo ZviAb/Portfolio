@@ -44,15 +44,6 @@ spec:
           inputs: |
             [INPUT]
                 Name tail
-                Path /var/log/containers/*.log
-                multiline.parser docker, cri
-                Tag kube.*
-                Mem_Buf_Limit 100MB
-                Skip_Long_Lines On
-                Refresh_Interval 5
-
-            [INPUT]
-                Name tail
                 Path /var/log/containers/*quiz-app*.log
                 multiline.parser docker, cri
                 Tag quizapp.*
@@ -60,21 +51,7 @@ spec:
                 Skip_Long_Lines On
                 Refresh_Interval 5
 
-            [INPUT]
-                Name systemd
-                Tag host.*
-                Systemd_Filter _SYSTEMD_UNIT=kubelet.service
-                Read_From_Tail On
-
           filters: |
-            [FILTER]
-                Name kubernetes
-                Match kube.*
-                Merge_Log On
-                Keep_Log Off
-                Buffer_Size False
-                K8S-Logging.Parser On
-
             [FILTER]
                 Name kubernetes
                 Match quizapp.*
@@ -105,38 +82,6 @@ spec:
                 Time_Format %Y-%m-%dT%H:%M:%S.%f
 
           outputs: |
-            [OUTPUT]
-                Name es
-                Match kube.*
-                Index fluent-bit
-                Type  _doc
-                Host elasticsearch-master
-                Port 9200
-                HTTP_User ${FLUENT_ES_USER}
-                HTTP_Passwd ${FLUENT_ES_PASS}
-                tls Off
-                tls.verify Off
-                Logstash_Format On
-                Logstash_Prefix logstash
-                Retry_Limit False
-                Suppress_Type_Name On
-
-            [OUTPUT]
-                Name es
-                Match host.*
-                Index fluent-bit
-                Type  _doc
-                Host elasticsearch-master
-                Port 9200
-                HTTP_User ${FLUENT_ES_USER}
-                HTTP_Passwd ${FLUENT_ES_PASS}
-                tls Off
-                tls.verify Off
-                Logstash_Format On
-                Logstash_Prefix node
-                Retry_Limit False
-                Suppress_Type_Name On
-
             [OUTPUT]
                 Name es
                 Match quizapp.*
