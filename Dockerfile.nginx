@@ -1,4 +1,4 @@
 FROM nginx:stable-alpine3.21 AS nginx
 
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY static/ /usr/share/nginx/html/static
+COPY app/static/ /usr/share/nginx/html/static

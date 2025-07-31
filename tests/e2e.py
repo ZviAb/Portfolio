@@ -4,16 +4,53 @@ import os
 import sys
 import uuid
 import logging
+import time
+import urllib.request
+import urllib.error
 from collections import defaultdict
 from datetime import datetime
 from sqlalchemy import text
 
-# הוספת נתיב לתיקיית הבסיס
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'app')))
 
-from app import app, db, User, Quiz, Question, Answer
+from app import app
+from models import db, User, Quiz, Question, Answer
 from werkzeug.security import generate_password_hash
 from flask_jwt_extended import create_access_token
+
+
+def wait_for_app_health(max_retries=30, delay=2):
+    """
+    Wait for the application to be healthy before starting E2E tests
+    Similar to: wget -q --spider http://127.0.0.1:5000/health
+    """
+    print("🏥 Performing health check before starting E2E tests...")
+    
+    # Try different possible URLs for the health endpoint
+    health_urls = [
+        "http://127.0.0.1:5000/health",
+        "http://localhost:5000/health", 
+        "http://app:5000/health"  # Docker service name
+    ]
+    
+    for attempt in range(max_retries):
+        for url in health_urls:
+            try:
+                request = urllib.request.Request(url)
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    if response.getcode() == 200:
+                        print(f"✅ Application is healthy at {url}")
+                        return True
+            except (urllib.error.URLError, urllib.error.HTTPError, OSError):
+                pass  # Try next URL
+        
+        if attempt < max_retries - 1:
+            print(f"⏳ Health check attempt {attempt + 1}/{max_retries} failed, retrying in {delay}s...")
+            time.sleep(delay)
+    
+    print(f"❌ Health check failed after {max_retries} attempts")
+    print("⚠️  Continuing with tests anyway...")
+    return False
 
 
 class E2ETestResult(unittest.TextTestResult):
@@ -30,12 +67,13 @@ class E2ETestResult(unittest.TextTestResult):
         
         # Add separator between individual tests
         if hasattr(self, 'test_count'):
-            print(f"\n{'='*70}")
+            print(f"\n{'='*80}")
         else:
             self.test_count = 0
         self.test_count += 1
             
         print(f"   Running: {test_name}")
+        print("-" * 80)
         
     def addSuccess(self, test):
         super().addSuccess(test)
@@ -101,7 +139,8 @@ class E2ETestRunner(unittest.TextTestRunner):
         else:
             print(f"\n🔧 Please review and fix the failing workflows.")
             
-        print(f"{'='*80}\n")
+        print(f"{'='*80}")
+        print("")
 
 
 class QuizAppE2ETest(unittest.TestCase):
@@ -133,19 +172,19 @@ class QuizAppE2ETest(unittest.TestCase):
         app.config['JWT_SECRET_KEY'] = 'e2e-test-secret-key'
         
         # Suppress app's logging and debug output during tests 
-        import app as app_module
-        cls.original_log_request = app_module.log_request
-        cls.original_logger_info = app_module.logger.info
-        cls.original_logger_error = app_module.logger.error
+        import utils as utils_module
+        cls.original_log_request = utils_module.log_request
+        cls.original_logger_info = utils_module.logger.info
+        cls.original_logger_error = utils_module.logger.error
         
         # Store original print function to suppress DEBUG prints
         import builtins
         cls.original_print = builtins.print
         
         # Replace logging functions with no-op functions during tests
-        app_module.log_request = lambda *_, **__: None
-        app_module.logger.info = lambda *_, **__: None  
-        app_module.logger.error = lambda *_, **__: None
+        utils_module.log_request = lambda *_, **__: None
+        utils_module.logger.info = lambda *_, **__: None  
+        utils_module.logger.error = lambda *_, **__: None
         
         # Override print to filter out DEBUG messages
         def filtered_print(*args, **kwargs):
@@ -164,11 +203,11 @@ class QuizAppE2ETest(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up test database"""
         # Restore original logging functions and print
-        import app as app_module
+        import utils as utils_module
         import builtins
-        app_module.log_request = cls.original_log_request
-        app_module.logger.info = cls.original_logger_info
-        app_module.logger.error = cls.original_logger_error
+        utils_module.log_request = cls.original_log_request
+        utils_module.logger.info = cls.original_logger_info
+        utils_module.logger.error = cls.original_logger_error
         builtins.print = cls.original_print
         
         cls._drop_test_database()
@@ -416,8 +455,13 @@ class QuizAppE2ETest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    print("=" * 80)
     print("🚀 Starting Quiz Application End-to-End Test Suite...")
     print("🎯 Testing complete user workflows and real-world scenarios...")
+    print("=" * 80)
+    
+    # Wait for application to be healthy before starting tests
+    wait_for_app_health()
     print("=" * 80)
     
     # Create custom test runner with no default output

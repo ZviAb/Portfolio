@@ -147,6 +147,7 @@ function setupUserDropdown() {
   dropdownMenu.className = 'dropdown-menu';
   dropdownMenu.innerHTML = `
     <a href="/dashboard" class="dropdown-item">Dashboard</a>
+    <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
     <a href="/profile" class="dropdown-item">Profile</a>
     <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
     <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>

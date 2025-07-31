@@ -4,15 +4,15 @@ import os
 import sys
 from collections import defaultdict
 
-# הוספת נתיב לתיקיית הבסיס
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'app')))
 
 # Set up environment before importing app
 os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
 os.environ.setdefault('JWT_SECRET_KEY', 'test-secret-key')
 os.environ.setdefault('FLASK_ENV', 'testing')
 
-from app import app, db, User, Quiz, Question, Answer
+from app import app
+from models import db, User, Quiz, Question, Answer
 from werkzeug.security import generate_password_hash
 from flask_jwt_extended import create_access_token
 
@@ -23,18 +23,18 @@ class FullAppTest(unittest.TestCase):
     def setUpClass(cls):
         """Set up test configuration and suppress app logging"""
         # Suppress app's logging and debug output during tests 
-        import app as app_module
+        import utils as utils_module
         import builtins
         
-        cls.original_log_request = app_module.log_request
-        cls.original_logger_info = app_module.logger.info
-        cls.original_logger_error = app_module.logger.error
+        cls.original_log_request = utils_module.log_request
+        cls.original_logger_info = utils_module.logger.info
+        cls.original_logger_error = utils_module.logger.error
         cls.original_print = builtins.print
         
         # Replace logging functions with no-op functions during tests
-        app_module.log_request = lambda *_, **__: None
-        app_module.logger.info = lambda *_, **__: None  
-        app_module.logger.error = lambda *_, **__: None
+        utils_module.log_request = lambda *_, **__: None
+        utils_module.logger.info = lambda *_, **__: None  
+        utils_module.logger.error = lambda *_, **__: None
         
         # Override print to filter out DEBUG messages
         def filtered_print(*args, **kwargs):
@@ -47,12 +47,12 @@ class FullAppTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Restore original logging and print functions"""
-        import app as app_module
+        import utils as utils_module
         import builtins
         
-        app_module.log_request = cls.original_log_request
-        app_module.logger.info = cls.original_logger_info
-        app_module.logger.error = cls.original_logger_error
+        utils_module.log_request = cls.original_log_request
+        utils_module.logger.info = cls.original_logger_info
+        utils_module.logger.error = cls.original_logger_error
         builtins.print = cls.original_print
     
     def setUp(self):
@@ -674,19 +674,19 @@ class CustomTestResult(unittest.TextTestResult):
         
     def addSuccess(self, test):
         super().addSuccess(test)
-        test_name = test._testMethodName
+        test_name = getattr(test, '_testMethodName', str(test))
         self.test_results[self.current_section].append((test_name, 'PASS'))
         print(f"PASSED: {test_name}")
         
     def addError(self, test, err):
         super().addError(test, err)
-        test_name = test._testMethodName
+        test_name = getattr(test, '_testMethodName', str(test))
         self.test_results[self.current_section].append((test_name, 'ERROR'))
         print(f"ERROR: {test_name}")
         
     def addFailure(self, test, err):
         super().addFailure(test, err)
-        test_name = test._testMethodName
+        test_name = getattr(test, '_testMethodName', str(test))
         self.test_results[self.current_section].append((test_name, 'FAIL'))
         print(f"FAILED: {test_name}")
 

@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile - Quiz App</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css"
-      rel="stylesheet"
-    />
+
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/styles.css') }}"
@@ -442,7 +439,7 @@
       </div>
     </div>
 
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="{{ url_for('static', filename='js/lucide.js') }}"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         // Initialize Lucide icons first
@@ -484,8 +481,9 @@
 
         const dropdownMenu = document.createElement("div");
         dropdownMenu.className = "dropdown-menu";
-        dropdownMenu.innerHTML = `
+            dropdownMenu.innerHTML = `
                 <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
                 <a href="/profile" class="dropdown-item">Profile</a>
                 <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
                 <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
