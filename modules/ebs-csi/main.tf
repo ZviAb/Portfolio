@@ -1,9 +1,9 @@
-# OIDC Identity Provider for EKS
-# Required for IAM roles for service accounts (IRSA)
+# Get TLS certificate for OIDC provider setup
 data "tls_certificate" "eks" {
   url = var.cluster_oidc_issuer_url
 }
 
+# OIDC Identity Provider for EKS - enables IAM roles for service accounts (IRSA)
 resource "aws_iam_openid_connect_provider" "eks" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]

@@ -49,11 +49,12 @@ resource "aws_eks_node_group" "main" {
     }
   )
 }
+# Get cluster authentication token for providers
 data "aws_eks_cluster_auth" "this" {
   name = aws_eks_cluster.main.id
 }
 
-# Update local kubeconfig automatically
+# Update local kubeconfig automatically after cluster creation
 resource "null_resource" "update_kubeconfig" {
   depends_on = [aws_eks_node_group.main]
   
@@ -67,7 +68,7 @@ resource "null_resource" "update_kubeconfig" {
   }
 }
 
-# Get current AWS region
+# Get current AWS region for kubeconfig update
 data "aws_region" "current" {}
 
 

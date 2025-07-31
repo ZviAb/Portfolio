@@ -78,7 +78,7 @@ resource "aws_security_group" "eks_nodes_sg" {
   }
 }
 
-# EKS Cluster IAM Role
+# EKS Cluster IAM Role - allows EKS service to manage cluster resources
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.project_prefix}-${terraform.workspace}-eks-cluster-role"
 
@@ -96,17 +96,19 @@ resource "aws_iam_role" "eks_cluster" {
   tags = var.resource_tags
 }
 
+# Attach required policies for EKS cluster management
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.eks_cluster.name
 }
 
+# Attach VPC resource controller policy for ENI management
 resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
   role       = aws_iam_role.eks_cluster.name
 }
 
-# EKS Node Group IAM Role
+# EKS Node Group IAM Role - allows EC2 instances to join EKS cluster
 resource "aws_iam_role" "eks_node_group" {
   name = "${var.project_prefix}-${terraform.workspace}-eks-node-group-role"
 
@@ -124,30 +126,31 @@ resource "aws_iam_role" "eks_node_group" {
   tags = var.resource_tags
 }
 
+# Attach worker node policy for basic EKS node functionality
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.eks_node_group.name
 }
 
+# Attach CNI policy for pod networking
 resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
   role       = aws_iam_role.eks_node_group.name
 }
 
+# Attach ECR policy for pulling container images
 resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   role       = aws_iam_role.eks_node_group.name
 }
 
-# Add Secrets Manager permissions for External Secrets Operator
+# Attach Secrets Manager policy for ArgoCD SSH keys and passwords
 resource "aws_iam_role_policy_attachment" "eks_secrets_manager" {
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
   role       = aws_iam_role.eks_node_group.name
 }
 
-
-
-# Instance Profile for EKS Node Group
+# Instance Profile for EKS Node Group - required for EC2 instances
 resource "aws_iam_instance_profile" "eks_node_group" {
   name = "${var.project_prefix}-${terraform.workspace}-eks-node-group-profile"
   role = aws_iam_role.eks_node_group.name

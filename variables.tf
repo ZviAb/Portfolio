@@ -1,8 +1,16 @@
+# =============================================================================
+# AWS CONFIGURATION
+# =============================================================================
+
 variable "aws_region" {
   type        = string
   description = "AWS region for resources"
   default     = "ap-south-1"
 }
+
+# =============================================================================
+# NETWORK CONFIGURATION
+# =============================================================================
 
 variable "vpc_cidr_block" {
   type        = string
@@ -10,7 +18,15 @@ variable "vpc_cidr_block" {
   default     = "10.0.0.0/16"
 }
 
+variable "subnet_count" {
+  type        = number
+  description = "Number of subnets to create"
+  default     = 2
+}
 
+# =============================================================================
+# PROJECT CONFIGURATION
+# =============================================================================
 
 variable "project_prefix" {
   type        = string
@@ -29,12 +45,19 @@ variable "resource_tags" {
   }
 }
 
-# EKS Variables
+# =============================================================================
+# EKS CLUSTER CONFIGURATION
+# =============================================================================
+
 variable "kubernetes_version" {
   type        = string
   description = "Kubernetes version for the EKS cluster"
   default     = "1.32"
 }
+
+# =============================================================================
+# EKS NODE GROUP CONFIGURATION
+# =============================================================================
 
 variable "node_instance_types" {
   type        = list(string)
@@ -44,7 +67,7 @@ variable "node_instance_types" {
 
 variable "capacity_type" {
   type        = string
-  description = "Type of capacity associated with the EKS Node Group"
+  description = "Type of capacity associated with the EKS Node Group (ON_DEMAND or SPOT)"
   default     = "ON_DEMAND"
 }
 
@@ -66,35 +89,35 @@ variable "min_capacity" {
   default     = 1
 }
 
-variable "subnet_count" {
-  type        = number
-  description = "Number of subnets to create"
-  default     = 2
-}
+# =============================================================================
+# ARGOCD CONFIGURATION
+# =============================================================================
 
-
+# Git Repository Configuration
 variable "git_repo_url" {
   type        = string
-  description = "Git repository URL for ArgoCD applications"
+  description = "Git repository URL for ArgoCD applications (SSH format)"
 }
 
 variable "aws_secrets_name" {
   type        = string
-  description = "AWS Secrets Manager secret name"
+  description = "AWS Secrets Manager secret name containing SSH keys and ArgoCD password"
 }
 
+# Infrastructure Applications Configuration
 variable "infra_app_name" {
   type        = string
-  description = "Name for infrastructure ArgoCD application"
+  description = "Name for infrastructure ArgoCD application (app-of-apps pattern)"
   default     = "infra-apps"
 }
 
 variable "infra_path" {
   type        = string
-  description = "Path for infrastructure applications in git"
+  description = "Path for infrastructure applications in git repository"
   default     = "infra-apps"
 }
 
+# Quiz Application Configuration
 variable "quiz_app_name" {
   type        = string
   description = "Name for quiz ArgoCD application"
@@ -103,7 +126,7 @@ variable "quiz_app_name" {
 
 variable "quiz_path" {
   type        = string
-  description = "Path for quiz applications in git"
+  description = "Path for quiz applications in git repository"
   default     = "quiz-apps"
 }
 

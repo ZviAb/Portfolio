@@ -1,8 +1,9 @@
-# Get available AZs
+# Get available AZs for multi-AZ deployment
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# Main VPC for EKS cluster
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr_block
 
@@ -14,6 +15,7 @@ resource "aws_vpc" "main" {
   )
 }
 
+# Public subnets for load balancers and NAT gateway
 resource "aws_subnet" "public" {
   count                   = var.subnet_count
   vpc_id                  = aws_vpc.main.id
@@ -29,6 +31,7 @@ resource "aws_subnet" "public" {
   )
 }
 
+# Private subnets for EKS worker nodes
 resource "aws_subnet" "private" {
   count             = var.subnet_count
   vpc_id            = aws_vpc.main.id
@@ -43,6 +46,7 @@ resource "aws_subnet" "private" {
   )
 }
 
+# Internet gateway for public subnet internet access
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
@@ -51,6 +55,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# Route table for public subnets
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -64,6 +69,7 @@ resource "aws_route_table" "public" {
   }
 }
 
+# Associate public subnets with public route table
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id

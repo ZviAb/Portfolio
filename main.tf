@@ -1,3 +1,4 @@
+# Network module - creates VPC, subnets, and routing infrastructure
 module "network" {
   source         = "./modules/network"
   vpc_cidr_block = var.vpc_cidr_block
@@ -6,6 +7,7 @@ module "network" {
   subnet_count   = var.subnet_count
 }
 
+# Security module - creates IAM roles and security groups for EKS
 module "security" {
   source         = "./modules/security"
   project_prefix = var.project_prefix
@@ -13,6 +15,7 @@ module "security" {
   vpc_id         = module.network.vpc_id
 }
 
+# EKS module - creates the EKS cluster and managed node groups
 module "eks" {
   source                    = "./modules/eks"
   project_prefix            = var.project_prefix
@@ -53,19 +56,12 @@ module "argocd" {
   quiz_namespace   = var.quiz_namespace
 }
 
-output "eks_cluster_endpoint" {
-  description = "EKS cluster endpoint"
-  value       = module.eks.cluster_endpoint
-}
 
 output "eks_cluster_name" {
   description = "EKS cluster name"
   value       = module.eks.cluster_id
 }
 
-output "eks_cluster_certificate_authority_data" {
-  description = "EKS cluster certificate authority data"
-  value       = module.eks.cluster_certificate_authority_data
-  sensitive   = true
-}
+
+
 
