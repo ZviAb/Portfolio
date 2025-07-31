@@ -5,7 +5,7 @@ app:
   uri: "postgresql://myuser:$(DB_PASSWORD)@quizapp-postgresql-ha-pgpool.quizapp.svc.cluster.local:5432/mydatabase"
   image:
     name: 011782265792.dkr.ecr.ap-south-1.amazonaws.com/zvi/quiz-app
-    tag: v1.0.4
+    tag: v1.0.5
   port: 5000
   resources:
     limits:
