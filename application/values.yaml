@@ -1,12 +1,11 @@
 app:
   AppName: quiz-app
+  namespaces: quizapp
   ReplicaCount: 2
-  # uri: "postgresql://{{ .Values.postgresql-ha.postgresql.username }}:$(DB_PASSWORD)@quizapp-postgresql-ha-pgpool.quizapp.svc.cluster.local:5432/{{ .Values.postgresql-ha.postgresql.database }}"
-  uri: "postgresql://myuser:$(DB_PASSWORD)@quiz-app-of-apps-postgresql-ha-pgpool.quizapp.svc.cluster.local:5432/mydatabase"
+  uri: "postgresql://myuser:$(DB_PASSWORD)@quizapp-postgresql-ha-pgpool.quizapp.svc.cluster.local:5432/mydatabase"
   image:
     name: 011782265792.dkr.ecr.ap-south-1.amazonaws.com/zvi/quiz-app
     tag: v1.0.2
-  # jwtSecret: your-jwt-secret-key-here
   port: 5000
   resources:
     limits:
@@ -23,9 +22,6 @@ ingress:
   - www.zvidevops.cloud
   - zvidevops.cloud
   tlsSecretName: quiz-app-tls
-
-namespaces:
-  application: quizapp
 
 
 postgresql-ha:

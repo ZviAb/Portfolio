@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: quiz-app-of-apps
+  name: quizapp
   namespace: argocd
 spec:
   project: default
@@ -19,10 +19,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-  ignoreDifferences:
-    - group: external-secrets.io
-      kind: ExternalSecret
-      name: quizapp-db-secret
-      namespace: quizapp
-      jsonPointers:
-        - /data
