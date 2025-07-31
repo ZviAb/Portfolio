@@ -1,0 +1,33 @@
+# AWS Configuration
+aws_region = "ap-south-1"
+
+# Network Configuration
+vpc_cidr_block = "10.0.0.0/16"
+
+# Project Configuration
+project_prefix = "myproject"
+resource_tags = {
+  Project         = "myproject"
+  owner           = "zvi.abramovich"
+  bootcamp        = "BC25"
+  expiration_date = "05-08-25"
+}
+
+# Network Configuration
+subnet_count = 2
+
+# EKS Configuration
+kubernetes_version   = "1.32"
+node_instance_types  = ["t3a.medium"]
+desired_capacity     = 2
+max_capacity         = 3
+min_capacity         = 1
+
+# ArgoCD Configuration
+git_repo_url      = "git@gitlab.com:your-group/your-repo.git"
+aws_secrets_name  = "your-project/secrets"
+infra_app_name    = "infra-apps"
+infra_path        = "infra-apps"
+quiz_app_name     = "quiz-app"
+quiz_path         = "quiz-apps"
+quiz_namespace    = "quiz-app"
