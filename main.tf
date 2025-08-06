@@ -1,3 +1,17 @@
+# Get current public IP dynamically
+data "http" "current_ip" {
+  url = "https://checkip.amazonaws.com"
+}
+
+locals {
+  current_ip_cidr = "${chomp(data.http.current_ip.response_body)}/32"
+  # Combine dynamic IP with any additional static IPs
+  admin_cidrs = concat(
+    [local.current_ip_cidr],
+    var.additional_admin_cidrs
+  )
+}
+
 # Network module - creates VPC, subnets, and routing infrastructure
 module "network" {
   source         = "./modules/network"
@@ -9,10 +23,11 @@ module "network" {
 
 # Security module - creates IAM roles and security groups for EKS
 module "security" {
-  source         = "./modules/security"
-  project_prefix = var.project_prefix
-  resource_tags  = var.resource_tags
-  vpc_id         = module.network.vpc_id
+  source            = "./modules/security"
+  project_prefix    = var.project_prefix
+  resource_tags     = var.resource_tags
+  vpc_id            = module.network.vpc_id
+  admin_cidr_blocks = local.admin_cidrs
 }
 
 # EKS module - creates the EKS cluster and managed node groups

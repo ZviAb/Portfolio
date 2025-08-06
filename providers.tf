@@ -22,6 +22,8 @@ terraform {
     bucket = "terraform-state-zvi"
     region = "ap-south-1"
     key    = "terraform.tfstate"
+    encrypt = true
+    use_lockfile = true # Enable S3 native locking (Terraform 1.9+)
   }
 }
 

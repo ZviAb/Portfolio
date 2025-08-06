@@ -90,6 +90,16 @@ variable "min_capacity" {
 }
 
 # =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
+variable "additional_admin_cidrs" {
+  type        = list(string)
+  description = "Additional CIDR blocks allowed to access EKS API server (beyond current IP)"
+  default     = []
+}
+
+# =============================================================================
 # ARGOCD CONFIGURATION
 # =============================================================================
 

@@ -13,3 +13,8 @@ variable "vpc_id" {
   description = "VPC ID where security groups will be created"
 }
 
+variable "admin_cidr_blocks" {
+  type        = list(string)
+  description = "CIDR blocks allowed to access EKS API server"
+}
+

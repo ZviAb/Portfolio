@@ -10,7 +10,7 @@ resource "aws_security_group" "eks_cluster_sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = var.admin_cidr_blocks 
   }
 
   egress {
@@ -23,6 +23,17 @@ resource "aws_security_group" "eks_cluster_sg" {
   tags = {
     Name = "${var.project_prefix}-${terraform.workspace}-eks-cluster-sg"
   }
+}
+
+# Allow EKS worker nodes to access the Kubernetes API server on port 443
+resource "aws_security_group_rule" "eks_api_from_nodes" {
+  description              = "Allow worker nodes to access EKS API"
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.eks_cluster_sg.id
+  source_security_group_id = aws_security_group.eks_nodes_sg.id
 }
 
 # EKS Worker Nodes SG
