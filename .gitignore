@@ -1,0 +1,39 @@
+
+
+# MacOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Flask env
+instance/
+.env
+.venv/
+venv/
+env/
+*.sqlite3
+
+# VS Code
+.vscode/
+
+# Test & coverage
+htmlcov/
+.coverage
+.tox/
+.nox/
+.cache/
+pytest_cache/
+coverage.xml
+*.cover
+*.py,cover
+
