@@ -1,0 +1,71 @@
+
+# =============================================================================
+# AWS CONFIGURATION
+# =============================================================================
+# AWS region where all resources will be created
+aws_region = "ap-south-1"
+
+# =============================================================================
+# NETWORK CONFIGURATION
+# =============================================================================
+# VPC CIDR block - adjust based on your network requirements
+vpc_cidr_block = "10.0.0.0/16"
+
+# Number of subnets to create (recommended: 2 for multi-AZ deployment)
+subnet_count = 2
+
+# =============================================================================
+# PROJECT CONFIGURATION
+# =============================================================================
+# Prefix for all resource names - change to your project name
+project_prefix = "your-project-name"
+
+# Resource tags - update with your information
+resource_tags = {
+  Project         = "YourProject"
+  ManagedBy       = "terraform"
+  owner           = "your.name@company.com"
+  environment     = "dev"
+  expiration_date = "31-12-2025"
+}
+
+# =============================================================================
+# EKS CLUSTER CONFIGURATION
+# =============================================================================
+# Kubernetes version - check AWS EKS supported versions
+kubernetes_version = "1.32"
+
+# =============================================================================
+# EKS NODE GROUP CONFIGURATION
+# =============================================================================
+# Instance types for worker nodes - adjust based on workload requirements
+# Options: t3a.small, t3a.medium, t3a.large, m5.large, etc.
+node_instance_types = ["t3a.medium"]
+
+# Node group scaling configuration
+desired_capacity = 2    # Start with 2 nodes for cost optimization
+max_capacity     = 5    # Maximum nodes for auto-scaling
+min_capacity     = 1    # Minimum nodes to maintain availability
+
+# =============================================================================
+# ARGOCD CONFIGURATION
+# =============================================================================
+# Git repository URL for ArgoCD applications (SSH format required)
+# Example: git@github.com:your-org/your-gitops-repo.git
+git_repo_url = "git@gitlab.com:your-group/your-gitops-repo.git"
+
+# AWS Secrets Manager secret name containing SSH keys and ArgoCD password
+# The secret should contain: {"SshKey": "...", "argocd_password": "..."}
+aws_secrets_name = "your-project/argocd-secrets"
+
+# =============================================================================
+# ARGOCD APPLICATIONS CONFIGURATION
+# =============================================================================
+# Infrastructure applications (app-of-apps pattern)
+infra_app_name = "infra-app-of-apps"
+infra_path     = "infra-apps"          # Path in git repo for infrastructure apps
+
+# Main application configuration
+quiz_app_name  = "your-app-name"
+quiz_path      = "application"         # Path in git repo for main application
+quiz_namespace = "your-app-namespace"  # Kubernetes namespace for your application

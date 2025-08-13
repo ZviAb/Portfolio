@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${name}
+  namespace: ${namespace}
+spec:
+  project: default
+  source:
+    repoURL: "${repo_url}"
+    targetRevision: HEAD
+    path: ${quiz_path}
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: ${quiz_namespace}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
