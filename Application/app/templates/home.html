@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz App</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="app">
+    <div class="bg-decoration-1"></div>
+    <div class="bg-decoration-2"></div>
+    <div class="content">
+      <header class="header">
+        <div class="header-container">
+          <div class="header-content">
+            <div class="logo-section" style="cursor: pointer;" onclick="window.location.href='/'">
+              <div class="logo-icon"><i data-lucide="brain"></i></div>
+              <h1 class="logo-text">Quiz App</h1>
+            </div>
+            <div class="user-section">
+              <button class="login-btn">Login</button>
+              <div class="user-info">
+                <span class="user-name">John Doe</span>
+                <div class="avatar"><i data-lucide="user"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main>
+        <section class="hero">
+          <div class="hero-container">
+            <h1 class="hero-title" id="heroTitle">Your personal quiz platform</h1>
+            <p class="hero-description" id="heroDescription">Create engaging quizzes, challenge yourself and others, and track your learning progress all in one place.</p>
+            <div class="hero-buttons" id="heroButtons">
+              <button class="btn-primary">Get Started</button>
+              <button class="btn-secondary">Login</button>
+            </div>
+          </div>
+        </section>
+        <section class="features">
+          <div class="features-container">
+            <div class="features-header">
+              <h2 class="features-title">Everything you need for quizzing</h2>
+              <p class="features-description">Powerful features to create, share, and track quiz performance</p>
+            </div>
+            <div class="features-grid">
+              <div class="feature-card" data-type="create">
+                <div class="feature-icon"><i data-lucide="edit-3"></i></div>
+                <h3 class="feature-title">Create Quizzes</h3>
+                <p class="feature-description">Build custom quizzes with multiple choice questions</p>
+              </div>
+              <div class="feature-card" data-type="challenge">
+                <div class="feature-icon"><i data-lucide="zap"></i></div>
+                <h3 class="feature-title">Take Challenges</h3>
+                <p class="feature-description">Answer questions and get immediate feedback</p>
+              </div>
+              <div class="feature-card" data-type="progress">
+                <div class="feature-icon"><i data-lucide="bar-chart-3"></i></div>
+                <h3 class="feature-title">Track Progress</h3>
+                <p class="feature-description">View your scores and see how you improve</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer class="footer">
+        <div class="footer-container">
+          <p class="footer-text">© 2025 Quiz App. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/lucide.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

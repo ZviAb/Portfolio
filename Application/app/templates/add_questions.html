@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Questions - Quiz App</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .quiz-header {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #71ad98;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #e5e7eb;
+            transition: border-left-color 0.2s;
+        }
+        
+        .question-card:hover {
+            border-left-color: #71ad98;
+        }
+        
+        .question-card.active {
+            border-left-color: #71ad98;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #71ad98;
+            box-shadow: 0 0 0 3px rgba(113, 173, 152, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+        }
+        
+        .option-group:hover {
+            background: #f9fafb;
+        }
+        
+        .option-radio {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: #71ad98;
+        }
+        
+        .option-input {
+            flex: 1;
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem 0;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .option-input:focus {
+            outline: none;
+            border-bottom-color: #71ad98;
+        }
+        
+        .add-question-btn {
+            background: #f8fafc;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+        }
+        
+        .add-question-btn:hover {
+            border-color: #71ad98;
+            background: #f0fdf4;
+        }
+        
+        .btn-primary {
+            background: #71ad98;
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #5d9a7f;
+        }
+        
+        .btn-secondary {
+            background: #f9fafb;
+            color: #374151;
+            border: 2px solid #d1d5db;
+            padding: 0.75rem 2rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+            border-color: #cbd5e1;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .question-number {
+            background: #71ad98;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg-decoration-1"></div>
+        <div class="bg-decoration-2"></div>
+        <div class="content">
+            <header class="header">
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="logo-section" style="cursor: pointer;" onclick="window.location.href='/'">
+                            <div class="logo-icon"><i data-lucide="brain"></i></div>
+                            <h1 class="logo-text">Quiz App</h1>
+                        </div>
+                        <div class="user-section">
+                            <div class="user-info">
+                                <span class="user-name" id="userName">Guest</span>
+                                <div class="avatar" id="avatar"><i data-lucide="user"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main>
+                <div class="form-container">
+                    <!-- Quiz Header -->
+                    <div class="quiz-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h1 style="margin: 0; color: #374151; font-size: 2rem;" id="quizTitle">Add Questions</h1>
+                            <button class="btn-secondary" onclick="window.location.href='/my-quizzes'">
+                                <i data-lucide="arrow-left" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></i>
+                                Back to Quiz
+                            </button>
+                        </div>
+                        <p style="color: #6b7280; margin: 0;" id="quizDescription">Add multiple choice questions to your quiz</p>
+                    </div>
+                    
+                    <!-- Questions Container -->
+                    <div id="questionsContainer">
+                        <!-- Questions will be added dynamically -->
+                    </div>
+                    
+                    <!-- Add Question Button -->
+                    <div class="add-question-btn" onclick="addQuestion()">
+                        <i data-lucide="plus" style="width: 2rem; height: 2rem; color: #71ad98; margin-bottom: 0.5rem;"></i>
+                        <div style="font-size: 1.125rem; font-weight: 500; color: #374151;">Add Question</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">Click to add a new multiple choice question</div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; padding: 2rem 0;">
+                        <button type="button" class="btn-secondary" onclick="window.location.href='/my-quizzes'">Cancel</button>
+                        <button type="button" class="btn-primary" onclick="saveQuestions()">Save Questions</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const quizId = {{ quiz_id }};
+        let questionCount = 0;
+        let quizData = {};
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            lucide.createIcons();
+            
+            // Check authentication
+            const token = localStorage.getItem('auth_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Update user name and setup dropdown
+            const userName = document.getElementById('userName');
+            if (userName && userInfo.full_name) {
+                userName.textContent = userInfo.full_name;
+                userName.style.display = 'inline';
+                setTimeout(setupUserDropdown, 100);
+            }
+            
+            // Load quiz data
+            loadQuizData();
+        });
+
+        // Dropdown functionality
+        function setupUserDropdown() {
+            const userName = document.querySelector('.user-name');
+            const userSection = document.querySelector('.user-info');
+            
+            if (!userName || !userSection) return;
+            if (userSection.parentNode.classList.contains('user-dropdown')) return;
+            
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = 'dropdown-menu';
+            dropdownMenu.innerHTML = `
+                <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
+                <a href="/profile" class="dropdown-item">Profile</a>
+                <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
+                <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
+                <button class="dropdown-item" onclick="logout()">Logout</button>
+            `;
+            
+            const dropdownWrapper = document.createElement('div');
+            dropdownWrapper.className = 'user-dropdown';
+            
+            userSection.parentNode.insertBefore(dropdownWrapper, userSection);
+            dropdownWrapper.appendChild(userSection);
+            dropdownWrapper.appendChild(dropdownMenu);
+            
+            dropdownWrapper.addEventListener('mouseenter', () => {
+                dropdownMenu.classList.add('show');
+            });
+            
+            dropdownWrapper.addEventListener('mouseleave', () => {
+                dropdownMenu.classList.remove('show');
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/';
+        }
+
+        async function loadQuizData() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`/quiz/${quizId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    quizData = await response.json();
+                    document.getElementById('quizTitle').textContent = `Add Questions to "${quizData.title}"`;
+                    document.getElementById('quizDescription').textContent = quizData.description || 'Add multiple choice questions to your quiz';
+                    
+                    // Add first question by default if no questions exist
+                    if (!quizData.questions || quizData.questions.length === 0) {
+                        addQuestion();
+                    }
+                } else {
+                    throw new Error('Failed to load quiz data');
+                }
+            } catch (error) {
+                console.error('Error loading quiz:', error);
+                showNotification('Error', 'Failed to load quiz data', 'error');
+            }
+        }
+
+        // Notification System
+        function showNotification(title, message, type = 'info') {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            notification.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        function addQuestion() {
+            // Update questionCount to reflect the number of questions from quizData and current cards
+            questionCount = (quizData.questions?.length || 0) + document.querySelectorAll('.question-card').length + 1;
+            const questionsContainer = document.getElementById('questionsContainer');
+            
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.id = `question-${questionCount}`;
+            
+            questionCard.innerHTML = `
+                <div class="question-header">
+                    <span class="question-number">Question ${questionCount}</span>
+                    <button class="btn-danger" onclick="removeQuestion(${questionCount})" title="Delete Question">
+                        <i data-lucide="trash-2" style="width: 1rem; height: 1rem;"></i>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Question Text *</label>
+                    <textarea class="form-input form-textarea" placeholder="Enter your question..." required data-question="${questionCount}"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Answer Options</label>
+                    <div class="options-container">
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="A" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option A" data-option="A" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">A</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="B" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option B" data-option="B" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">B</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="C" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option C" data-option="C" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">C</span>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" name="correct-${questionCount}" value="D" class="option-radio">
+                            <input type="text" class="option-input" placeholder="Option D" data-option="D" data-question="${questionCount}">
+                            <span style="font-size: 0.75rem; color: #6b7280;">D</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
+                        <i data-lucide="info" style="width: 0.875rem; height: 0.875rem; display: inline; margin-right: 0.25rem;"></i>
+                        Select the radio button next to the correct answer
+                    </p>
+                </div>
+            `;
+            
+            questionsContainer.appendChild(questionCard);
+            
+            // Add focus effect
+            const questionTextarea = questionCard.querySelector('textarea');
+            questionTextarea.addEventListener('focus', () => {
+                questionCard.classList.add('active');
+            });
+            
+            questionTextarea.addEventListener('blur', () => {
+                questionCard.classList.remove('active');
+            });
+            
+            // Re-initialize icons
+            lucide.createIcons();
+            
+            // Scroll to new question
+            questionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function removeQuestion(questionId) {
+            if (questionCount <= 1) {
+                showNotification('Cannot Delete', 'You must have at least one question.', 'warning');
+                return;
+            }
+            
+            const questionCard = document.getElementById(`question-${questionId}`);
+            if (questionCard) {
+                questionCard.remove();
+                questionCount--;
+                
+                // Renumber remaining questions
+                renumberQuestions();
+            }
+        }
+
+        function renumberQuestions() {
+            const questionCards = document.querySelectorAll('.question-card');
+            questionCards.forEach((card, index) => {
+                const questionNumber = card.querySelector('.question-number');
+                if (questionNumber) {
+                    questionNumber.textContent = `Question ${index + 1}`;
+                }
+            });
+        }
+
+        async function saveQuestions() {
+            // Collect all questions
+            const questions = [];
+            const questionCards = document.querySelectorAll('.question-card');
+            
+            for (let i = 0; i < questionCards.length; i++) {
+                const card = questionCards[i];
+                const questionText = card.querySelector('textarea').value.trim();
+                const optionA = card.querySelector('[data-option="A"]').value.trim();
+                const optionB = card.querySelector('[data-option="B"]').value.trim();
+                const optionC = card.querySelector('[data-option="C"]').value.trim();
+                const optionD = card.querySelector('[data-option="D"]').value.trim();
+                const correctAnswer = card.querySelector('input[type="radio"]:checked');
+                
+                if (!questionText) {
+                    showNotification('Missing Question', `Please enter text for question ${i + 1}.`, 'error');
+                    return;
+                }
+                
+                if (!optionA || !optionB || !optionC || !optionD) {
+                    showNotification('Missing Options', `Please fill in all options for question ${i + 1}.`, 'error');
+                    return;
+                }
+                
+                if (!correctAnswer) {
+                    showNotification('Missing Correct Answer', `Please select the correct answer for question ${i + 1}.`, 'error');
+                    return;
+                }
+                
+                questions.push({
+                    text: questionText,
+                    option_a: optionA,
+                    option_b: optionB,
+                    option_c: optionC,
+                    option_d: optionD,
+                    correct_option: correctAnswer.value
+                });
+            }
+            
+            if (questions.length === 0) {
+                showNotification('No Questions', 'Please add at least one question.', 'error');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('auth_token');
+                
+                // Add questions to the quiz
+                for (const question of questions) {
+                    const questionResponse = await fetch(`/quiz/${quizId}/question`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(question)
+                    });
+                    
+                    if (!questionResponse.ok) {
+                        throw new Error('Failed to add question');
+                    }
+                }
+                
+                showNotification('Questions Added!', `${questions.length} questions have been added successfully.`, 'success');
+                
+                setTimeout(() => {
+                    window.location.href = `/quiz/${quizId}/manage`;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error adding questions:', error);
+                showNotification('Error', 'Failed to add questions. Please try again.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

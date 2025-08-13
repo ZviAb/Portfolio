@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Quizzes - Quiz App</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-decoration-1"></div>
+        <div class="bg-decoration-2"></div>
+        <div class="content">
+            <header class="header">
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="logo-section" style="cursor: pointer;" onclick="window.location.href='/'">
+                            <div class="logo-icon"><i data-lucide="brain"></i></div>
+                            <h1 class="logo-text">Quiz App</h1>
+                        </div>
+                        <div class="user-section">
+                            <div class="user-info">
+                                <span class="user-name" id="userName">Guest</span>
+                                <div class="avatar" id="avatar"><i data-lucide="user"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main style="padding: 2rem;">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+                        <div>
+                            <h1 style="color: white; font-size: 2.5rem; margin-bottom: 0.5rem; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);">My Quizzes</h1>
+                            <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.2rem;">Manage your created quizzes</p>
+                        </div>
+                        <button onclick="window.location.href='/create-quiz'" style="background: white; color: #71ad98; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <i data-lucide="plus-circle" style="width: 1.25rem; height: 1.25rem;"></i>
+                            Create New Quiz
+                        </button>
+                    </div>
+
+                    <div id="quizzesContainer">
+                        <div style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.8);">
+                            <i data-lucide="loader" style="width: 2rem; height: 2rem; animation: spin 1s linear infinite;"></i>
+                            <p style="margin-top: 1rem;">Loading your quizzes...</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/lucide.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Lucide icons first
+            lucide.createIcons();
+            
+            // Check authentication
+            const token = localStorage.getItem('auth_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Update user name and setup dropdown
+            const userName = document.getElementById('userName');
+            if (userName && userInfo.full_name) {
+                userName.textContent = userInfo.full_name;
+                userName.style.display = 'inline';
+                
+                // Setup dropdown after setting name
+                setTimeout(setupUserDropdown, 100);
+            }
+            
+            // Load user's quizzes
+            loadUserQuizzes();
+        });
+
+        // Dropdown functionality
+        function setupUserDropdown() {
+            const userName = document.querySelector('.user-name');
+            const userSection = document.querySelector('.user-info');
+            
+            if (!userName || !userSection) return;
+            
+            // Check if dropdown already exists
+            if (userSection.parentNode.classList.contains('user-dropdown')) return;
+            
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = 'dropdown-menu';
+            dropdownMenu.innerHTML = `
+                <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
+                <a href="/profile" class="dropdown-item">Profile</a>
+                <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
+                <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
+                <button class="dropdown-item" onclick="logout()">Logout</button>
+            `;
+            
+            const dropdownWrapper = document.createElement('div');
+            dropdownWrapper.className = 'user-dropdown';
+            
+            userSection.parentNode.insertBefore(dropdownWrapper, userSection);
+            dropdownWrapper.appendChild(userSection);
+            dropdownWrapper.appendChild(dropdownMenu);
+            
+            dropdownWrapper.addEventListener('mouseenter', () => {
+                dropdownMenu.classList.add('show');
+            });
+            
+            dropdownWrapper.addEventListener('mouseleave', () => {
+                dropdownMenu.classList.remove('show');
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/';
+        }
+
+        // Notification System
+        function showNotification(title, message, type = 'info') {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            notification.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        async function loadUserQuizzes() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+                
+                const response = await fetch('/quiz', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const allQuizzes = await response.json();
+                    const userQuizzes = allQuizzes.filter(quiz => quiz.creator_id === userInfo.user_id);
+                    
+                    displayQuizzes(userQuizzes);
+                } else {
+                    throw new Error('Failed to load quizzes');
+                }
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+                document.getElementById('quizzesContainer').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: rgba(255, 255, 255, 0.8);">
+                        <i data-lucide="alert-circle" style="width: 2rem; height: 2rem; color: #ef4444;"></i>
+                        <p style="margin-top: 1rem;">Error loading quizzes. Please try again.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function displayQuizzes(quizzes) {
+            const container = document.getElementById('quizzesContainer');
+            
+            if (quizzes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 4rem; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                        <i data-lucide="file-question" style="width: 4rem; height: 4rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #374151; margin-bottom: 1rem; font-size: 1.5rem;">No Quizzes Yet</h3>
+                        <p style="color: #6b7280; margin-bottom: 2rem;">You haven't created any quizzes yet. Start by creating your first quiz!</p>
+                        <button onclick="window.location.href='/create-quiz'" style="background: #71ad98; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
+                            Create Your First Quiz
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;">
+                        ${quizzes.map(quiz => `
+                            <div style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: transform 0.2s;">
+                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                                    <h3 style="color: #374151; font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; flex-grow: 1;">${quiz.title}</h3>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button onclick="manageQuiz(${quiz.id})" style="background: #f3f4f6; color: #374151; border: none; border-radius: 0.375rem; padding: 0.5rem; cursor: pointer; display: flex; align-items: center;" title="Manage Quiz">
+                                            <i data-lucide="settings" style="width: 1rem; height: 1rem;"></i>
+                                        </button>
+                                        <button onclick="deleteQuiz(${quiz.id}, '${quiz.title}')" style="background: #fef2f2; color: #ef4444; border: none; border-radius: 0.375rem; padding: 0.5rem; cursor: pointer; display: flex; align-items: center;" title="Delete Quiz">
+                                            <i data-lucide="trash-2" style="width: 1rem; height: 1rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <p style="color: #6b7280; margin-bottom: 1.5rem; line-height: 1.5;">${quiz.description || 'No description provided'}</p>
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-top: 1rem; border-top: 1px solid #f3f4f6;">
+                                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #6b7280;">
+                                            <i data-lucide="tag" style="width: 1rem; height: 1rem;"></i>
+                                            <span style="font-size: 0.875rem;">${quiz.topic || 'General'}</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #6b7280;">
+                                            <i data-lucide="help-circle" style="width: 1rem; height: 1rem;"></i>
+                                            <span style="font-size: 0.875rem;">${quiz.question_count} questions</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #6b7280;">
+                                            <i data-lucide="calendar" style="width: 1rem; height: 1rem;"></i>
+                                            <span style="font-size: 0.875rem;">${new Date(quiz.created_at).toLocaleDateString('he-IL').replace(/\./g, '/')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <button onclick="window.location.href='/quiz/${quiz.id}/add-questions'" style="background: #71ad98; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; flex: 1;">
+                                        Add Questions
+                                    </button>
+                                    <button onclick="window.location.href='/quiz/${quiz.id}/preview'" style="background: transparent; color: #71ad98; border: 1px solid #71ad98; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; flex: 1;">
+                                        Preview
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            lucide.createIcons();
+        }
+
+        function manageQuiz(quizId) {
+            window.location.href = `/quiz/${quizId}/manage`;
+        }
+
+        async function deleteQuiz(quizId, quizTitle) {
+            if (!confirm(`Are you sure you want to delete "${quizTitle}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`/quiz/${quizId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showNotification('Quiz Deleted', `"${quizTitle}" has been deleted successfully.`, 'success');
+                    // Reload quizzes
+                    setTimeout(() => {
+                        loadUserQuizzes();
+                    }, 1000);
+                } else {
+                    throw new Error('Failed to delete quiz');
+                }
+            } catch (error) {
+                console.error('Error deleting quiz:', error);
+                showNotification('Delete Failed', 'Failed to delete quiz. Please try again.', 'error');
+            }
+        }
+
+        // Add CSS for hover effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            [style*="background: white"][style*="border-radius: 1rem"]:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Quiz App</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app">
+        <div class="bg-decoration-1"></div>
+        <div class="bg-decoration-2"></div>
+        <div class="content">
+            <header class="header">
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="logo-section" style="cursor: pointer;" onclick="window.location.href='/'">
+                            <div class="logo-icon"><i data-lucide="brain"></i></div>
+                            <h1 class="logo-text">Quiz App</h1>
+                        </div>
+                        <div class="user-section">
+                            <div class="user-info">
+                                <span class="user-name" id="userName">Guest</span>
+                                <div class="avatar" id="avatar"><i data-lucide="user"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main style="padding: 2rem;">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 3rem;">
+                        <h1 style="color: white; font-size: 2.5rem; margin-bottom: 1rem; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);">Welcome to your Dashboard</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.2rem;">Manage your quizzes and track your progress</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i data-lucide="plus-circle"></i></div>
+                            <h3 class="feature-title">Create Quiz</h3>
+                            <p class="feature-description">Build new quizzes with custom questions</p>
+                            <button onclick="window.location.href='/create-quiz'" style="background: #71ad98; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; margin-top: 1rem;">Create New Quiz</button>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon"><i data-lucide="list"></i></div>
+                            <h3 class="feature-title">My Quizzes</h3>
+                            <p class="feature-description">View and manage your created quizzes</p>
+                            <button onclick="window.location.href='/my-quizzes'" style="background: #71ad98; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; margin-top: 1rem;">View My Quizzes</button>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon"><i data-lucide="user"></i></div>
+                            <h3 class="feature-title">Profile</h3>
+                            <p class="feature-description">Manage your account settings</p>
+                            <button onclick="window.location.href='/profile'" style="background: #71ad98; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; margin-top: 1rem;">View Profile</button>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon"><i data-lucide="search"></i></div>
+                            <h3 class="feature-title">Browse All Quizzes</h3>
+                            <p class="feature-description">Discover and take quizzes from the community with advanced filtering</p>
+                            <button onclick="window.location.href='/browse-quizzes'" style="background: #71ad98; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; margin-top: 1rem;">Browse Quizzes</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/lucide.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Lucide icons first
+            lucide.createIcons();
+            
+            // Check authentication
+            const token = localStorage.getItem('auth_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Update user name and setup dropdown
+            const userName = document.getElementById('userName');
+            if (userName && userInfo.full_name) {
+                userName.textContent = userInfo.full_name;
+                userName.style.display = 'inline';
+                
+                // Setup dropdown after setting name
+                setTimeout(setupUserDropdown, 100);
+            }
+        });
+
+        // Dropdown functionality
+        function setupUserDropdown() {
+            const userName = document.querySelector('.user-name');
+            const userSection = document.querySelector('.user-info');
+            
+            if (!userName || !userSection) {
+                console.log('Dashboard: userName or userSection not found');
+                return;
+            }
+            
+            // Check if dropdown already exists
+            if (userSection.parentNode.classList.contains('user-dropdown')) {
+                console.log('Dashboard: Dropdown already exists');
+                return;
+            }
+            
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.className = 'dropdown-menu';
+            dropdownMenu.innerHTML = `
+                <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                <a href="/create-quiz" class="dropdown-item">Create Quiz</a>
+                <a href="/profile" class="dropdown-item">Profile</a>
+                <a href="/my-quizzes" class="dropdown-item">My Quizzes</a>
+                <a href="/browse-quizzes" class="dropdown-item">Browse All Quizzes</a>
+                <button class="dropdown-item" onclick="logout()">Logout</button>
+            `;
+            
+            const dropdownWrapper = document.createElement('div');
+            dropdownWrapper.className = 'user-dropdown';
+            
+            userSection.parentNode.insertBefore(dropdownWrapper, userSection);
+            dropdownWrapper.appendChild(userSection);
+            dropdownWrapper.appendChild(dropdownMenu);
+            
+            dropdownWrapper.addEventListener('mouseenter', () => {
+                dropdownMenu.classList.add('show');
+            });
+            
+            dropdownWrapper.addEventListener('mouseleave', () => {
+                dropdownMenu.classList.remove('show');
+            });
+            
+            console.log('Dashboard: Dropdown setup complete');
+        }
+
+        function initializeDropdown() {
+            const token = localStorage.getItem('auth_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (token && userInfo.full_name) {
+                const userName = document.querySelector('.user-name');
+                if (userName) {
+                    userName.textContent = userInfo.full_name;
+                    userName.style.display = 'inline';
+                    setupUserDropdown();
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/';
+        }
+
+    </script>
+</body>
+</html>
