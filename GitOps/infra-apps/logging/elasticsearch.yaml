@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: elasticsearch
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "https://helm.elastic.co"
+    chart: elasticsearch
+    targetRevision: 7.17.3
+    helm:
+      values: |
+        replicas: 1
+        minimumMasterNodes: 1
+
+        esConfig:
+          elasticsearch.yml: |
+            xpack.security.enabled: true
+            xpack.security.transport.ssl.enabled: false
+
+        secret:
+          enabled: true
+          passwordFromSecret: true
+
+        extraEnvs:
+          - name: ELASTIC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: logging-secret
+                key: password
+
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+
+        volumeClaimTemplate:
+          storageClassName: gp3
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: 10Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

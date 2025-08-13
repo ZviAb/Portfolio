@@ -1,0 +1,51 @@
+app:
+  AppName: quiz-app
+  namespaces: quizapp
+  ReplicaCount: 2
+  uri: "postgresql://myuser:$(DB_PASSWORD)@quizapp-postgresql-ha-pgpool.quizapp.svc.cluster.local:5432/mydatabase"
+  image:
+    name: 011782265792.dkr.ecr.ap-south-1.amazonaws.com/zvi/quiz-app
+    tag: v1.0.14
+  port: 5000
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+ingress:
+  clusterIssuer: letsencrypt-prod-quizapp
+  email: zviabramovich22@gmail.com
+  hosts:
+  - www.zvidevops.cloud
+  - zvidevops.cloud
+  tlsSecretName: quiz-app-tls
+
+
+postgresql-ha:
+  postgresql:
+    username: myuser
+    database: mydatabase
+    existingSecret: quizapp-db-secret
+    postgresPasswordSecretKey: postgres-password
+    replicaCount: 2
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
+      requests:
+        cpu: "250m"
+        memory: "128Mi"
+    persistence:
+      enabled: true
+      storageClass: "gp3"
+      size: 8Gi
+
+  repmgr:
+    existingSecret: quizapp-db-secret
+    passwordSecretKey: repmgr-password
+
+ 
+

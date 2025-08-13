@@ -1,0 +1,110 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fluent-bit
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+
+spec:
+  project: default
+  source:
+    repoURL: https://fluent.github.io/helm-charts
+    chart: fluent-bit
+    targetRevision: 0.45.0
+    helm:
+      values: |
+        logLevel: info
+        env:
+          - name: FLUENT_ES_USER
+            valueFrom:
+              secretKeyRef:
+                name: logging-secret
+                key: username
+          - name: FLUENT_ES_PASS
+            valueFrom:
+              secretKeyRef:
+                name: logging-secret
+                key: password
+
+        config:
+          service: |
+            [SERVICE]
+                Daemon Off
+                Flush 1
+                Log_Level debug
+                Parsers_File /fluent-bit/etc/parsers.conf
+                Parsers_File /fluent-bit/etc/conf/custom_parsers.conf
+                HTTP_Server On
+                HTTP_Listen 0.0.0.0
+                HTTP_Port 2020
+                Health_Check On
+                Trace_Error On
+
+          inputs: |
+            [INPUT]
+                Name tail
+                Path /var/log/containers/*quiz-app*.log
+                multiline.parser docker, cri
+                Tag quizapp.*
+                Mem_Buf_Limit 50MB
+                Skip_Long_Lines On
+                Refresh_Interval 5
+
+          filters: |
+            [FILTER]
+                Name kubernetes
+                Match quizapp.*
+                Merge_Log On
+                Keep_Log Off
+                Buffer_Size False
+                K8S-Logging.Parser On
+
+            [FILTER]
+                Name parser
+                Match quizapp.*
+                Key_Name log
+                Parser quiz_app_json
+                Reserve_Data On
+                Preserve_Key On
+
+          customParsers: |
+            [PARSER]
+                Name quiz_app_json
+                Format json
+                Time_Key timestamp
+                Time_Format %Y-%m-%dT%H:%M:%S.%f
+
+            [PARSER]
+                Name quiz_app_events
+                Format json
+                Time_Key timestamp
+                Time_Format %Y-%m-%dT%H:%M:%S.%f
+
+          outputs: |
+            [OUTPUT]
+                Name es
+                Match quizapp.*
+                Index quiz-app-logs
+                Type  _doc
+                Host elasticsearch-master
+                Port 9200
+                HTTP_User ${FLUENT_ES_USER}
+                HTTP_Passwd ${FLUENT_ES_PASS}
+                tls Off
+                tls.verify Off
+                Logstash_Format On
+                Logstash_Prefix quiz-app
+                Retry_Limit False
+                Suppress_Type_Name On
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
