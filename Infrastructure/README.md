@@ -2,6 +2,8 @@
 
 A production ready Infrastructure as Code (IaC) deploying Amazon EKS clusters with essential applications. This Terraform project provides a complete, modular infrastructure setup including networking, security, storage, and application deployment automation.
 
+![Infrastructure Overview](../Pics/Infrastructure.png)
+
 ## Table of Contents
 
 - [Overview](#overview)

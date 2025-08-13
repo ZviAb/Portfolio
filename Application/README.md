@@ -23,6 +23,16 @@ An advanced quiz management system built with Flask and PostgreSQL, fully contai
 - **Advanced UI**: Responsive design with HTML/CSS/JavaScript
 - **Complete API**: Comprehensive REST API for all functionality
 
+### Application Interface
+
+![Main Page](../Pics/main_page_1.png)
+
+![Application Dashboard](../Pics/app_dash.png)
+
+![Quiz Interface](../Pics/quiz_ans.png)
+
+![Quiz Results](../Pics/quiz_ans2.png)
+
 ## Technologies
 
 - **Backend**: Flask (Python)
@@ -36,10 +46,12 @@ An advanced quiz management system built with Flask and PostgreSQL, fully contai
 ## System Requirements
 
 ### For Docker Deployment (Recommended)
+
 - Docker 20.10+
 - Docker Compose 2.0+
 
 ### For Local Development
+
 - Python 3.8+
 - PostgreSQL 12+
 
@@ -80,18 +92,22 @@ portfolio-application/
 ### Key Files Description
 
 **Core Application:**
+
 - `app.py` - Contains the entire Flask application including database models (User, Quiz, Question, Answer), all API routes, authentication logic, and application configuration
 
 **Docker Configuration:**
+
 - `docker-compose.yml` - Orchestrates three services: Flask app, PostgreSQL database, and Nginx proxy
 - `Dockerfile` - Multi-stage build for the Flask application with Python dependencies
 - `Dockerfile.nginx` - Lightweight Nginx container for reverse proxy and static file serving
 
 **Frontend:**
+
 - `templates/` - Server-side rendered HTML templates using Jinja2 templating engine
 - `static/` - Client-side assets including responsive CSS, interactive JavaScript, and UI images
 
 **DevOps:**
+
 - `Jenkinsfile` - Automated CI/CD pipeline with build, test, and deployment stages
 - `requirements.txt` - Pinned Python dependencies for reproducible builds
 
@@ -100,6 +116,7 @@ portfolio-application/
 ### Local Installation
 
 1. **Create virtual environment**:
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -108,12 +125,14 @@ venv\Scripts\activate     # Windows
 ```
 
 2. **Install dependencies**:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. **Set environment variables**:
-Create a `.env` file in the project directory:
+   Create a `.env` file in the project directory:
+
 ```env
 DB_NAME=quiz_db
 DB_USER=quiz_user
@@ -125,6 +144,7 @@ JWT_SECRET_KEY=your-secret-key-change-in-production
 **Note:** For Docker deployment, change `localhost` to `postgres` in the DATABASE_URL.
 
 4. **Run the application**:
+
 ```bash
 python app.py
 ```
@@ -134,28 +154,31 @@ The application will automatically create the database tables on first run and b
 ### Docker Setup (Recommended)
 
 The application is fully containerized and can be deployed using Docker Compose, which includes:
+
 - Flask application container
 - PostgreSQL database container
 - Nginx reverse proxy container
 
-
-
 1. **Run with Docker Compose**:
+
 ```bash
 docker-compose up -d
 ```
 
 2. **View running containers**:
+
 ```bash
 docker-compose ps
 ```
 
 3. **View logs**:
+
 ```bash
 docker-compose logs -f
 ```
 
 4. **Stop services**:
+
 ```bash
 docker-compose down
 ```
@@ -196,23 +219,27 @@ The application will be available at: `http://localhost` (port 80)
 ## Advanced Features
 
 ### Security
+
 - Password encryption with Werkzeug
 - JWT authentication for all sensitive operations
 - CORS attack protection
 - Comprehensive logging of all operations
 
 ### Performance
+
 - Database connection pooling
 - Result caching
 - SQL query optimization
 
 ### Containerization
+
 - Multi-container Docker architecture
 - Nginx reverse proxy for load balancing
 - Isolated database container
 - Easy horizontal scaling with Docker Swarm
 
 ### Monitoring and Logging
+
 - Built-in JSON logging
 - User activity tracking
 - Performance metrics
@@ -231,6 +258,7 @@ The test suite is organized into two main categories:
 ### Running Tests
 
 **Local Testing:**
+
 ```bash
 # Install test dependencies
 pip install pytest pytest-cov
@@ -247,6 +275,7 @@ python -m pytest tests/e2e.py -v
 ```
 
 **Docker Testing (As used in CI/CD Pipeline):**
+
 ```bash
 # Build unit test container
 docker compose --profile unit-test build unit-test
@@ -266,6 +295,7 @@ docker compose --profile app down
 ### Test Coverage
 
 The test suite covers:
+
 - **User Authentication**: Registration, login, password validation, JWT token management
 - **Quiz Management**: CRUD operations, authorization checks, data validation
 - **Question Handling**: Adding, updating, deleting questions with proper validation
@@ -282,7 +312,10 @@ Tests are automatically executed in the Jenkins CI/CD pipeline with the followin
 3. **Package** - Builds application containers for integration testing
 4. **E2E Tests** - Executes end-to-end tests with full application stack (only on feature branches and main)
 
+![Pipeline Success](../Pics/Pipeline_Completed_Successfully.png)
+
 **Pipeline Test Flow:**
+
 - Unit tests run on every commit to any branch
 - E2E tests run only on `feature/*` branches and `main` branch
 - Tests use Docker Compose profiles for isolated environments

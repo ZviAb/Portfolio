@@ -2,6 +2,8 @@
 
 This repository contains a complete Kubernetes deployment for a Quiz Application using the App of Apps pattern with Argo CD. It manages both the main quiz application and all necessary infrastructure components, including ingress controller, cert-manager, monitoring stack (Prometheus, Grafana), logging (Elasticsearch, Fluent Bit, Kibana), and more.
 
+![Kubernetes Architecture](../Pics/k8s.png)
+
 ## Table of Contents
 
 - [Project Structure](#project-structure)
@@ -118,6 +120,8 @@ Then visit http://localhost:3000
 - Username: `admin`
 - Password: Retrieved from `monitoring-secret`
 
+![Monitoring Dashboard](../Pics/monitoring-dashboard.png)
+
 ### Kibana (Logging)
 
 Access Kibana dashboard:
@@ -130,6 +134,8 @@ Then visit http://localhost:5601
 
 - Username: `elastic`
 - Password: Retrieved from `logging-secret`
+
+![Logging Dashboard](../Pics/logging-dashboard.png)
 
 ## Useful Commands
 
